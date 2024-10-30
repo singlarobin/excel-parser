@@ -1,5 +1,7 @@
-import { Text, View, Linking, Alert } from "react-native";
+import { Text, View, Linking, Alert, TouchableOpacity } from "react-native";
 import Toast from "react-native-root-toast";
+import { Ionicons } from "@expo/vector-icons";
+
 import _isNil from "lodash/isNil";
 
 import { styles } from "./card.styled";
@@ -38,7 +40,46 @@ export const Card = ({ data }: CardProps) => {
 
     return (
         <View style={styles.container}>
-            <Text onPress={() => dialPhoneNumber(Phone)}>{Phone ?? "-"}</Text>
+            <View style={styles.leftContainer}>
+                <View style={styles.inlineStyle}>
+                    <Text style={styles.headerText}>Name:</Text>
+                    <Text> {`${data["Head of Account"]}`}</Text>
+                </View>
+
+                <View style={styles.inlineStyle}>
+                    <Text style={styles.headerText}>Phone:</Text>
+                    <Text> {`${data["Phone"] ?? "-"}`}</Text>
+                </View>
+
+                <View style={styles.inlineStyle}>
+                    <Text style={styles.headerText}>City Name:</Text>
+                    <Text> {`${data["City Name"]}`}</Text>
+                </View>
+
+                <View style={styles.inlineStyle}>
+                    <Text style={styles.headerText}>Plumber:</Text>
+                    <Text> {`${data["pl"]}`}</Text>
+                </View>
+            </View>
+            <View style={styles.rightContainer}>
+                <TouchableOpacity onPress={() => dialPhoneNumber(Phone)}>
+                    <Ionicons name="call-sharp" size={20} color={"blue"} />
+                </TouchableOpacity>
+
+                <View style={styles.inlineStyle}>
+                    <Text style={[styles.headerText]}>Balance:</Text>
+                    <Text>{`${data["Balance"]}`}</Text>
+                </View>
+
+                <View style={styles.inlineStyle}>
+                    <Text style={[styles.headerText, styles.redText]}>
+                        Due Date:{" "}
+                    </Text>
+                    <Text style={[styles.redText]}>{`${
+                        data["Due Date"] ?? "N/A"
+                    }`}</Text>
+                </View>
+            </View>
         </View>
     );
 };

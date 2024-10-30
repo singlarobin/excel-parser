@@ -27,12 +27,7 @@ export const styles = StyleSheet.create({
         width: "36%",
     },
     horizontalLine: {
-        height: 1,
-        backgroundColor: "grey",
+        height: 16,
     },
-    listContainer: {
-        // flex: 1,
-        borderWidth: 2,
-        borderColor: "pink",
-    },
+    listContainer: {},
 });

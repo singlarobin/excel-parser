@@ -8,12 +8,30 @@ import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 
 import { styles } from "./home.styled";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "./component/card/card";
+import {
+    saveLocalStorageData,
+    loadLocalStorageData,
+} from "@/utils/helperFunction";
+import { parsedDataKey } from "./constant";
 
 export const HomeScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>();
     const [isLoading, setIsLoading] = useState(false);
+
+    console.log("=========>", fileData?.[0]);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        const storedData = await loadLocalStorageData(parsedDataKey);
+        if (storedData) {
+            setFileData(storedData);
+        }
+    };
 
     const selectFile = async (): Promise<string | null> => {
         try {
@@ -68,6 +86,7 @@ export const HomeScreen = () => {
         if (fileUri) {
             const data = await parseXLSX(fileUri);
             setFileData(data ?? []);
+            saveLocalStorageData(data ?? [], parsedDataKey);
             setIsLoading(false);
             //console.log("Extracted Data:", data, typeof data);
         } else {
