@@ -43,7 +43,7 @@ export const Card = ({ data }: CardProps) => {
             <View style={styles.leftContainer}>
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>Name:</Text>
-                    <Text> {`${data["Head of Account"]}`}</Text>
+                    <Text> {`${data["Head of Account"] ?? "-"}`}</Text>
                 </View>
 
                 <View style={styles.inlineStyle}>
@@ -53,12 +53,12 @@ export const Card = ({ data }: CardProps) => {
 
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>City Name:</Text>
-                    <Text> {`${data["City Name"]}`}</Text>
+                    <Text> {`${data["City Name"] ?? "-"}`}</Text>
                 </View>
 
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>Plumber:</Text>
-                    <Text> {`${data["pl"]}`}</Text>
+                    <Text> {`${data["pl"] ?? "-"}`}</Text>
                 </View>
             </View>
             <View style={styles.rightContainer}>
@@ -68,15 +68,24 @@ export const Card = ({ data }: CardProps) => {
 
                 <View style={styles.inlineStyle}>
                     <Text style={[styles.headerText]}>Balance:</Text>
-                    <Text>{`${data["Balance"]}`}</Text>
+                    <Text>{`${data["Balance"] ?? "-"}`}</Text>
                 </View>
 
                 <View style={styles.inlineStyle}>
                     <Text style={[styles.headerText, styles.redText]}>
-                        Due Date:{" "}
+                        Date:
                     </Text>
                     <Text style={[styles.redText]}>{`${
-                        data["Due Date"] ?? "N/A"
+                        data["Date"] ?? "N/A"
+                    }`}</Text>
+                </View>
+
+                <View style={styles.inlineStyle}>
+                    <Text style={[styles.headerText, styles.redText]}>
+                        DD1:
+                    </Text>
+                    <Text style={[styles.redText]}>{`${
+                        data["DD1"] ?? "N/A"
                     }`}</Text>
                 </View>
             </View>

@@ -85,6 +85,13 @@ export const HomeScreen = () => {
         const fileUri = await selectFile();
         if (fileUri) {
             const data = await parseXLSX(fileUri);
+
+            (data ?? []).sort((a, b) => {
+                const dateA = new Date(a["DD1"].split("-").reverse().join("-"));
+                const dateB = new Date(b["DD1"].split("-").reverse().join("-"));
+                return dateA.getTime() - dateB.getTime(); // Ascending order
+            });
+
             setFileData(data ?? []);
             saveLocalStorageData(data ?? [], parsedDataKey);
             setIsLoading(false);
