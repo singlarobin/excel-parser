@@ -20,8 +20,6 @@ export const HomeScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>();
     const [isLoading, setIsLoading] = useState(false);
 
-    console.log("=========>", fileData?.[0]);
-
     useEffect(() => {
         fetchData();
     }, []);
@@ -95,7 +93,6 @@ export const HomeScreen = () => {
             setFileData(data ?? []);
             saveLocalStorageData(data ?? [], parsedDataKey);
             setIsLoading(false);
-            //console.log("Extracted Data:", data, typeof data);
         } else {
             setIsLoading(false);
         }

@@ -14,6 +14,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View } from "react-native";
+import ScreenHeader from "@/components/ScreenHeader/ScreenHeader";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -46,7 +47,9 @@ export default function RootLayout() {
                             name="index"
                             options={{
                                 headerShown: true,
-                                headerTitle: "Excel Parser",
+                                header: () => (
+                                    <ScreenHeader headerName="Balance Connect" />
+                                ),
                                 statusBarStyle: "dark",
                             }}
                         />
