@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 
 // Save Data
 export const saveLocalStorageData = async (data: any, storageKey: string) => {
@@ -24,4 +25,13 @@ export const loadLocalStorageData = async (storageKey: string) => {
         console.error("Error loading data:", error);
     }
     return null;
+};
+
+export const generateRandomId = async () => {
+    const id = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        Math.random().toString()
+    );
+
+    return id;
 };

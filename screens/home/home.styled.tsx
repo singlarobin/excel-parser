@@ -29,5 +29,14 @@ export const styles = StyleSheet.create({
     horizontalLine: {
         height: 16,
     },
+    searchBox: {
+        borderWidth: 1,
+        borderColor: "gray",
+        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        marginVertical: 12,
+        width: "50%",
+    },
     listContainer: {},
 });

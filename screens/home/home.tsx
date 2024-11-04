@@ -1,4 +1,10 @@
-import { Button, View, ActivityIndicator, FlatList } from "react-native";
+import {
+    Button,
+    View,
+    ActivityIndicator,
+    FlatList,
+    TextInput,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import * as DocumentPicker from "expo-document-picker";
@@ -6,6 +12,7 @@ import * as FileSystem from "expo-file-system";
 import XLSX from "xlsx";
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
+import debounce from "lodash/debounce";
 
 import { styles } from "./home.styled";
 import { useEffect, useState } from "react";
@@ -13,16 +20,26 @@ import { Card } from "./component/card/card";
 import {
     saveLocalStorageData,
     loadLocalStorageData,
+    generateRandomId,
 } from "@/utils/helperFunction";
 import { parsedDataKey } from "./constant";
 
 export const HomeScreen = () => {
-    const [fileData, setFileData] = useState<Array<Record<string, any>>>();
+    const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
+    const [filteredData, setFilteredData] = useState<
+        Array<Record<string, any>>
+    >([]);
+
+    const [searchValue, setSearchValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        setFilteredData(fileData);
+    }, [JSON.stringify(fileData)]);
 
     const fetchData = async () => {
         const storedData = await loadLocalStorageData(parsedDataKey);
@@ -84,6 +101,8 @@ export const HomeScreen = () => {
         if (fileUri) {
             const data = await parseXLSX(fileUri);
 
+            (data ?? []).map((obj) => ({ ...obj, id: generateRandomId() }));
+
             (data ?? []).sort((a, b) => {
                 const dateA = new Date(a["DD1"].split("-").reverse().join("-"));
                 const dateB = new Date(b["DD1"].split("-").reverse().join("-"));
@@ -96,6 +115,33 @@ export const HomeScreen = () => {
         } else {
             setIsLoading(false);
         }
+    };
+
+    const handleListFiltering = (type: string, value: any) => {
+        if (type === "search") {
+            if (value === "" || value === undefined) {
+                setFilteredData(fileData);
+            } else {
+                setFilteredData(
+                    fileData?.filter((obj) =>
+                        (obj["Head of Account"] ?? "")
+                            .toLowerCase()
+                            .includes(value.toLowerCase())
+                    )
+                );
+            }
+        }
+    };
+
+    const debounceListFiltering = debounce(
+        (type, value) => handleListFiltering(type, value),
+        500
+    );
+
+    const handleSearch = (text: string) => {
+        setSearchValue(text);
+
+        debounceListFiltering("search", text);
     };
 
     return (
@@ -117,6 +163,17 @@ export const HomeScreen = () => {
 
             {!_isNil(fileData) && !_isEmpty(fileData) && (
                 <View style={styles.dataContainer}>
+                    <View>
+                        <TextInput
+                            placeholder={"Search By Name"}
+                            style={[styles.searchBox]}
+                            // textAlign={"center"}
+                            autoFocus={false}
+                            autoCapitalize={"none"}
+                            value={searchValue}
+                            onChangeText={handleSearch}
+                        />
+                    </View>
                     <View style={styles.header}>
                         <View style={[styles.btnStyle2]}>
                             {isLoading ? (
@@ -132,17 +189,23 @@ export const HomeScreen = () => {
                             )}
                         </View>
                     </View>
-                    <FlatList
-                        contentContainerStyle={styles.listContainer}
-                        data={fileData}
-                        ItemSeparatorComponent={() => (
-                            <View style={styles.horizontalLine} />
-                        )}
-                        keyExtractor={(item, index) => String(index)}
-                        renderItem={({ item, index }) => {
-                            return <Card key={index} data={item} />;
-                        }}
-                    />
+                    {!isLoading && (
+                        <FlatList
+                            contentContainerStyle={styles.listContainer}
+                            data={filteredData}
+                            ItemSeparatorComponent={() => (
+                                <View style={styles.horizontalLine} />
+                            )}
+                            keyExtractor={(item, index) =>
+                                item.id ?? String(index)
+                            }
+                            renderItem={({ item, index }) => {
+                                return (
+                                    <Card key={item?.id ?? index} data={item} />
+                                );
+                            }}
+                        />
+                    )}
                 </View>
             )}
         </SafeAreaView>
