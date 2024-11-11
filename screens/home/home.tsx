@@ -1,15 +1,11 @@
-import {
-    Button,
-    View,
-    ActivityIndicator,
-    FlatList,
-    TextInput,
-} from "react-native";
+import { Button, View, ActivityIndicator, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import XLSX from "xlsx";
+import type { DateData } from "react-native-calendars";
+
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 import debounce from "lodash/debounce";
@@ -21,8 +17,10 @@ import {
     saveLocalStorageData,
     loadLocalStorageData,
     generateRandomId,
+    formatDate,
 } from "@/utils/helperFunction";
 import { parsedDataKey } from "./constant";
+import { Filter } from "./component/Filter/Filter";
 
 export const HomeScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
@@ -32,6 +30,7 @@ export const HomeScreen = () => {
 
     const [searchValue, setSearchValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedDate, setSelectedDate] = useState("");
 
     useEffect(() => {
         fetchData();
@@ -118,15 +117,60 @@ export const HomeScreen = () => {
     };
 
     const handleListFiltering = (type: string, value: any) => {
-        if (type === "search") {
-            if (value === "" || value === undefined) {
+        if (value === "" || value === undefined) {
+            if (
+                (type === "search" && selectedDate === "") ||
+                (type === "dueDate" && searchValue === "")
+            ) {
                 setFilteredData(fileData);
-            } else {
+            } else if (type === "search" && selectedDate !== "") {
+                setFilteredData(
+                    fileData?.filter(
+                        (obj) => (obj["DD1"] ?? "") === formatDate(value)
+                    )
+                );
+            } else if (type === "dueDate" && searchValue !== "") {
                 setFilteredData(
                     fileData?.filter((obj) =>
                         (obj["Head of Account"] ?? "")
                             .toLowerCase()
                             .includes(value.toLowerCase())
+                    )
+                );
+            }
+        } else {
+            if (type === "search" && selectedDate === "") {
+                setFilteredData(
+                    fileData?.filter((obj) =>
+                        (obj["Head of Account"] ?? "")
+                            .toLowerCase()
+                            .includes(value.toLowerCase())
+                    )
+                );
+            } else if (type === "dueDate" && searchValue === "") {
+                setFilteredData(
+                    fileData?.filter(
+                        (obj) => (obj["DD1"] ?? "") === formatDate(value)
+                    )
+                );
+            } else if (type === "search" && selectedDate !== "") {
+                setFilteredData(
+                    fileData?.filter(
+                        (obj) =>
+                            (obj["DD1"] ?? "") === formatDate(selectedDate) &&
+                            (obj["Head of Account"] ?? "")
+                                .toLowerCase()
+                                .includes(value.toLowerCase())
+                    )
+                );
+            } else if (type === "dueDate" && searchValue !== "") {
+                setFilteredData(
+                    fileData?.filter(
+                        (obj) =>
+                            (obj["DD1"] ?? "") === formatDate(value) &&
+                            (obj["Head of Account"] ?? "")
+                                .toLowerCase()
+                                .includes(searchValue.toLowerCase())
                     )
                 );
             }
@@ -142,6 +186,17 @@ export const HomeScreen = () => {
         setSearchValue(text);
 
         debounceListFiltering("search", text);
+    };
+
+    const onDayPress = (day: DateData | string) => {
+        let dateString = "";
+
+        if (typeof day === "object") {
+            dateString = day.dateString;
+        }
+
+        setSelectedDate(dateString);
+        debounceListFiltering("dueDate", dateString);
     };
 
     return (
@@ -164,14 +219,11 @@ export const HomeScreen = () => {
             {!_isNil(fileData) && !_isEmpty(fileData) && (
                 <View style={styles.dataContainer}>
                     <View>
-                        <TextInput
-                            placeholder={"Search By Name"}
-                            style={[styles.searchBox]}
-                            // textAlign={"center"}
-                            autoFocus={false}
-                            autoCapitalize={"none"}
-                            value={searchValue}
-                            onChangeText={handleSearch}
+                        <Filter
+                            searchValue={searchValue}
+                            handleSearch={handleSearch}
+                            selectedDate={selectedDate}
+                            onDayPress={onDayPress}
                         />
                     </View>
                     <View style={styles.header}>
