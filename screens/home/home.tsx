@@ -18,9 +18,11 @@ import {
     loadLocalStorageData,
     generateRandomId,
     formatDate,
+    formatIsoDate,
 } from "@/utils/helperFunction";
 import { parsedDataKey } from "./constant";
 import { Filter } from "./component/Filter/Filter";
+import Toast from "react-native-root-toast";
 
 export const HomeScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
@@ -90,33 +92,72 @@ export const HomeScreen = () => {
             return data; // Return the data array containing the sheet's content
         } catch (error) {
             console.error("Error parsing XLSX file:", error);
+            if (error instanceof Error) {
+                Toast.show(`Error parsing XLSX file=> ${error.message}`);
+            }
             return null;
         }
     };
 
+    const convertExcelDateToJsIsoDateString = (excelDate: any) => {
+        if (typeof excelDate === "string") {
+            const separator = (excelDate ?? "").includes("-") ? "-" : "/";
+            return new Date(
+                (excelDate ?? "").split(separator).reverse().join(separator)
+            ).toISOString();
+        } else if (typeof excelDate === "number") {
+            // Base date in Google Sheets (30th December 1899)
+            const baseDate = new Date(1899, 11, 30);
+            // Add the excelDate as days to the base date
+            const jsDate = new Date(
+                baseDate.getTime() + excelDate * 24 * 60 * 60 * 1000
+            );
+
+            return jsDate.toISOString(); // Returns a valid JavaScript Date object
+        }
+
+        return excelDate;
+    };
+
     const handleFileUpload = async (): Promise<void> => {
-        setIsLoading(true);
-        const fileUri = await selectFile();
-        if (fileUri) {
-            const data = await parseXLSX(fileUri);
+        try {
+            setIsLoading(true);
+            const fileUri = await selectFile();
+            if (fileUri) {
+                let data = await parseXLSX(fileUri);
 
-            (data ?? []).map((obj) => ({ ...obj, id: generateRandomId() }));
+                data = (data ?? []).map((obj) => ({
+                    ...obj,
+                    id: generateRandomId(),
+                    DD1: convertExcelDateToJsIsoDateString(obj["DD1"]),
+                }));
 
-            (data ?? []).sort((a, b) => {
-                const dateA = new Date(a["DD1"].split("-").reverse().join("-"));
-                const dateB = new Date(b["DD1"].split("-").reverse().join("-"));
-                return dateA.getTime() - dateB.getTime(); // Ascending order
-            });
+                (data ?? []).sort((a, b) => {
+                    const dateA = new Date(a["DD1"]);
+                    const dateB = new Date(b["DD1"]);
 
-            setFileData(data ?? []);
-            saveLocalStorageData(data ?? [], parsedDataKey);
-            setIsLoading(false);
-        } else {
+                    return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
+                });
+
+                setFileData(data ?? []);
+
+                saveLocalStorageData(data ?? [], parsedDataKey);
+
+                setIsLoading(false);
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.log("Error =>", error);
+            if (error instanceof Error) {
+                Toast.show(`Error Uploading File => ${error.message}`);
+            }
+        } finally {
             setIsLoading(false);
         }
     };
 
-    const handleListFiltering = (type: string, value: any) => {
+    const handleListFiltering2 = (type: string, value: any) => {
         if (value === "" || value === undefined) {
             if (
                 (type === "search" && selectedDate === "") ||
@@ -175,6 +216,32 @@ export const HomeScreen = () => {
                 );
             }
         }
+    };
+
+    const handleListFiltering = (type: string, value: any) => {
+        const searchTerm = type === "search" ? value : searchValue;
+        const dueDate = type === "dueDate" ? value : selectedDate;
+
+        const filteredData = fileData?.filter((obj) => {
+            const matchesSearch = searchTerm
+                ? (obj["Head of Account"] ?? "")
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase())
+                : true;
+
+            const currentDueDate =
+                !_isNil(obj["DD1"]) && !_isEmpty(obj["DD1"])
+                    ? formatIsoDate(obj["DD1"])
+                    : "";
+
+            const matchesDueDate = dueDate
+                ? currentDueDate === formatDate(dueDate)
+                : true;
+
+            return matchesSearch && matchesDueDate;
+        });
+
+        setFilteredData(filteredData);
     };
 
     const debounceListFiltering = debounce(

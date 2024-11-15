@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import _isNil from "lodash/isNil";
 
 import { styles } from "./card.styled";
+import { formatIsoDate } from "@/utils/helperFunction";
 
 type CardProps = {
     data: Record<string, any>;
@@ -85,7 +86,7 @@ export const Card = ({ data }: CardProps) => {
                         DD1:
                     </Text>
                     <Text style={[styles.redText]}>{`${
-                        data["DD1"] ?? "N/A"
+                        formatIsoDate(data["DD1"]) ?? "N/A"
                     }`}</Text>
                 </View>
             </View>

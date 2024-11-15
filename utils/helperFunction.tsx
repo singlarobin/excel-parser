@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Crypto from "expo-crypto";
 
 // Save Data
 export const saveLocalStorageData = async (data: any, storageKey: string) => {
@@ -27,16 +26,20 @@ export const loadLocalStorageData = async (storageKey: string) => {
     return null;
 };
 
-export const generateRandomId = async () => {
-    const id = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        Math.random().toString()
-    );
-
-    return id;
+export const generateRandomId = () => {
+    return btoa(Math.random().toString() + Date.now().toString());
 };
 
 export const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+};
+
+export const formatIsoDate = (isoString: string) => {
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, "0"); // Ensures two digits for day
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // getMonth() is 0-indexed
+    const year = date.getFullYear();
+
     return `${day}-${month}-${year}`;
 };
