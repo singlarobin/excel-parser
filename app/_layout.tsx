@@ -53,6 +53,16 @@ export default function RootLayout() {
                                 statusBarStyle: "dark",
                             }}
                         />
+                        <Stack.Screen
+                            name="CustomerListRoute"
+                            options={{
+                                headerShown: true,
+                                header: () => (
+                                    <ScreenHeader headerName="Balance Connect" />
+                                ),
+                                statusBarStyle: "dark",
+                            }}
+                        />
                         <Stack.Screen name="+not-found" />
                     </Stack>
                 </SafeAreaProvider>

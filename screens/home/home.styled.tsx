@@ -4,39 +4,46 @@ export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
-        paddingHorizontal: 8,
+        paddingHorizontal: 16,
         paddingVertical: 8,
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
     },
-    btnStyle: {
-        width: "50%",
-    },
-    emptyDataContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    dataContainer: {
-        flex: 1,
-    },
-    header: {
+    stepContainer: {
         flexDirection: "row",
-        justifyContent: "center",
+        width: "100%",
+        gap: 12,
+        justifyContent: "space-between",
+        alignItems: "center",
+        minHeight: 40,
         marginBottom: 8,
     },
-    btnStyle2: {
-        width: "36%",
+    stepNameStyle: {
+        fontSize: 16,
     },
-    horizontalLine: {
-        height: 16,
+    stepRightContainer: {
+        flexDirection: "row",
+        gap: 8,
     },
-    searchBox: {
-        borderWidth: 1,
-        borderColor: "gray",
-        borderRadius: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        marginVertical: 12,
-        width: "50%",
+    loader: {
+        width: "100%",
+        height: "78.5%",
     },
-    listContainer: {},
+    columnMapContainer: {
+        height: "70%",
+        width: "100%",
+        alignItems: "flex-start",
+        marginBottom: 8,
+    },
+    listContainer: {
+        paddingTop: 12,
+        paddingLeft: 28,
+        width: "100%",
+    },
+    listItem: {
+        flexDirection: "row",
+        gap: 12,
+        justifyContent: "space-between",
+        marginBottom: 8,
+    },
 });

@@ -1,53 +1,65 @@
-import { Button, View, ActivityIndicator, FlatList } from "react-native";
+import { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Button,
+    FlatList,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-root-toast";
 
+import Ionicons from "@expo/vector-icons/Ionicons";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
-import XLSX from "xlsx";
-import type { DateData } from "react-native-calendars";
+import XLSX, { WorkSheet } from "xlsx";
 
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
-import debounce from "lodash/debounce";
+import cloneDeep from "lodash/cloneDeep";
 
+import { generateRandomId, saveLocalStorageData } from "@/utils/helperFunction";
+import { parsedDataKey } from "../CustomerData/constant";
 import { styles } from "./home.styled";
-import { useEffect, useState } from "react";
-import { Card } from "./component/card/card";
-import {
-    saveLocalStorageData,
-    loadLocalStorageData,
-    generateRandomId,
-    formatDate,
-    formatIsoDate,
-} from "@/utils/helperFunction";
-import { parsedDataKey } from "./constant";
-import { Filter } from "./component/Filter/Filter";
-import Toast from "react-native-root-toast";
+import { Colors } from "@/constants/Colors";
+import { Dropdown } from "@/components/Dropdown/Dropdown";
+import { mapToFieldObj } from "./constant";
 
 export const HomeScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
-    const [filteredData, setFilteredData] = useState<
-        Array<Record<string, any>>
+
+    const [fileName, setFileName] = useState<string>();
+    const [selectedSheet, setSelectedSheet] = useState<string>();
+
+    const [selectedSheetColumnList, setSelectedSheetColumnList] = useState<
+        string[]
+    >([]);
+    const [sheetNameList, setSheetNameList] = useState<string[]>([]);
+
+    const [allSheetsData, setAllSheetsData] = useState<{
+        [sheetName: string]: WorkSheet;
+    }>();
+
+    const [fieldList, setFieldList] = useState<
+        Array<{
+            label: string;
+            value: string;
+            selecedColumn?: string;
+        }>
     >([]);
 
-    const [searchValue, setSearchValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [selectedDate, setSelectedDate] = useState("");
 
     useEffect(() => {
-        fetchData();
+        const currFieldList = Object.entries(mapToFieldObj).map(
+            ([key, value]) => ({
+                value: key,
+                label: value,
+            })
+        );
+        setFieldList(currFieldList);
     }, []);
-
-    useEffect(() => {
-        setFilteredData(fileData);
-    }, [JSON.stringify(fileData)]);
-
-    const fetchData = async () => {
-        const storedData = await loadLocalStorageData(parsedDataKey);
-        if (storedData) {
-            setFileData(storedData);
-        }
-    };
 
     const selectFile = async (): Promise<string | null> => {
         try {
@@ -58,7 +70,12 @@ export const HomeScreen = () => {
                 ],
             });
 
+            console.log("result ===>", result);
+
             if (!result.canceled) {
+                const fileName = result.assets?.[0].name.split(".")[0];
+                setFileName(fileName);
+
                 const fileUri = result.assets[0].uri;
 
                 return fileUri;
@@ -71,7 +88,7 @@ export const HomeScreen = () => {
         return null;
     };
 
-    const parseXLSX = async (fileUri: string): Promise<any[] | null> => {
+    const parseXLSX = async (fileUri: string) => {
         try {
             // Read the file as a base64-encoded string
             const fileContent = await FileSystem.readAsStringAsync(fileUri, {
@@ -81,15 +98,8 @@ export const HomeScreen = () => {
             // Parse the base64 string
             const workbook = XLSX.read(fileContent, { type: "base64" });
 
-            // Get the first sheet name
-
-            const sheetName = workbook.SheetNames[0];
-
-            // Read data from the first sheet
-            const sheet = workbook.Sheets[sheetName];
-            const data = XLSX.utils.sheet_to_json(sheet);
-
-            return data; // Return the data array containing the sheet's content
+            setSheetNameList(workbook.SheetNames);
+            setAllSheetsData(workbook.Sheets);
         } catch (error) {
             console.error("Error parsing XLSX file:", error);
             if (error instanceof Error) {
@@ -124,24 +134,7 @@ export const HomeScreen = () => {
             setIsLoading(true);
             const fileUri = await selectFile();
             if (fileUri) {
-                let data = await parseXLSX(fileUri);
-
-                data = (data ?? []).map((obj) => ({
-                    ...obj,
-                    id: generateRandomId(),
-                    DD1: convertExcelDateToJsIsoDateString(obj["DD1"]),
-                }));
-
-                (data ?? []).sort((a, b) => {
-                    const dateA = new Date(a["DD1"]);
-                    const dateB = new Date(b["DD1"]);
-
-                    return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
-                });
-
-                setFileData(data ?? []);
-
-                saveLocalStorageData(data ?? [], parsedDataKey);
+                await parseXLSX(fileUri);
 
                 setIsLoading(false);
             } else {
@@ -157,176 +150,170 @@ export const HomeScreen = () => {
         }
     };
 
-    const handleListFiltering2 = (type: string, value: any) => {
-        if (value === "" || value === undefined) {
-            if (
-                (type === "search" && selectedDate === "") ||
-                (type === "dueDate" && searchValue === "")
-            ) {
-                setFilteredData(fileData);
-            } else if (type === "search" && selectedDate !== "") {
-                setFilteredData(
-                    fileData?.filter(
-                        (obj) => (obj["DD1"] ?? "") === formatDate(value)
-                    )
-                );
-            } else if (type === "dueDate" && searchValue !== "") {
-                setFilteredData(
-                    fileData?.filter((obj) =>
-                        (obj["Head of Account"] ?? "")
-                            .toLowerCase()
-                            .includes(value.toLowerCase())
-                    )
-                );
-            }
-        } else {
-            if (type === "search" && selectedDate === "") {
-                setFilteredData(
-                    fileData?.filter((obj) =>
-                        (obj["Head of Account"] ?? "")
-                            .toLowerCase()
-                            .includes(value.toLowerCase())
-                    )
-                );
-            } else if (type === "dueDate" && searchValue === "") {
-                setFilteredData(
-                    fileData?.filter(
-                        (obj) => (obj["DD1"] ?? "") === formatDate(value)
-                    )
-                );
-            } else if (type === "search" && selectedDate !== "") {
-                setFilteredData(
-                    fileData?.filter(
-                        (obj) =>
-                            (obj["DD1"] ?? "") === formatDate(selectedDate) &&
-                            (obj["Head of Account"] ?? "")
-                                .toLowerCase()
-                                .includes(value.toLowerCase())
-                    )
-                );
-            } else if (type === "dueDate" && searchValue !== "") {
-                setFilteredData(
-                    fileData?.filter(
-                        (obj) =>
-                            (obj["DD1"] ?? "") === formatDate(value) &&
-                            (obj["Head of Account"] ?? "")
-                                .toLowerCase()
-                                .includes(searchValue.toLowerCase())
-                    )
-                );
+    const handleSheetSelection = (selectedSheet: any) => {
+        console.log("selectedSheet==>", selectedSheet);
+        setSelectedSheet(selectedSheet);
+
+        if (!_isNil(allSheetsData)) {
+            const sheet = allSheetsData[selectedSheet];
+            const data = XLSX.utils.sheet_to_json(sheet) as any[];
+
+            if (!_isNil(data) && !_isEmpty(data)) {
+                setSelectedSheetColumnList(Object.keys(data[0]));
             }
         }
     };
 
-    const handleListFiltering = (type: string, value: any) => {
-        const searchTerm = type === "search" ? value : searchValue;
-        const dueDate = type === "dueDate" ? value : selectedDate;
+    const convertDataBasedOnColumnMap = (data: any[]) => {
+        const updatedData = cloneDeep(data);
 
-        const filteredData = fileData?.filter((obj) => {
-            const matchesSearch = searchTerm
-                ? (obj["Head of Account"] ?? "")
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                : true;
+        const mappedColumnData = fieldList.reduce(
+            (acc: Record<string, string>, item) => {
+                if (item.selecedColumn) {
+                    acc[item.selecedColumn] = item.value;
+                }
+                return acc;
+            },
+            {}
+        );
 
-            const currentDueDate =
-                !_isNil(obj["DD1"]) && !_isEmpty(obj["DD1"])
-                    ? formatIsoDate(obj["DD1"])
-                    : "";
+        const mappedKeysList = Object.keys(mappedColumnData);
 
-            const matchesDueDate = dueDate
-                ? currentDueDate === formatDate(dueDate)
-                : true;
-
-            return matchesSearch && matchesDueDate;
+        return updatedData.map((obj) => {
+            const otherData = mappedKeysList.reduce(
+                (acc: Record<string, string>, key) => {
+                    return {
+                        ...acc,
+                        [mappedColumnData[key]]: obj[key],
+                    };
+                },
+                {}
+            );
+            return {
+                ...obj,
+                ...otherData,
+            };
         });
-
-        setFilteredData(filteredData);
     };
 
-    const debounceListFiltering = debounce(
-        (type, value) => handleListFiltering(type, value),
-        500
-    );
+    const handleImport = () => {
+        if (!_isNil(allSheetsData) && !_isNil(selectedSheet)) {
+            const sheet = allSheetsData[selectedSheet];
+            let data = XLSX.utils.sheet_to_json(sheet) as any[];
 
-    const handleSearch = (text: string) => {
-        setSearchValue(text);
+            data = convertDataBasedOnColumnMap(data);
 
-        debounceListFiltering("search", text);
-    };
+            console.log("handleImport ======>", data);
 
-    const onDayPress = (day: DateData | string) => {
-        let dateString = "";
+            // data = (data ?? []).map((obj) => ({
+            //     ...obj,
+            //     id: generateRandomId(),
+            //     dueDate: convertExcelDateToJsIsoDateString(obj["dueDate"]),
+            // }));
 
-        if (typeof day === "object") {
-            dateString = day.dateString;
+            // (data ?? []).sort((a, b) => {
+            //     const dateA = new Date(a["dueDate"]);
+            //     const dateB = new Date(b["dueDate"]);
+
+            //     return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
+            // });
+
+            // setFileData(data ?? []);
+
+            // saveLocalStorageData(data ?? [], parsedDataKey);
         }
-
-        setSelectedDate(dateString);
-        debounceListFiltering("dueDate", dateString);
     };
 
     return (
         <SafeAreaView style={[styles.container]}>
-            {(_isNil(fileData) || _isEmpty(fileData)) && (
-                <View style={[styles.emptyDataContainer]}>
-                    <View style={[styles.btnStyle]}>
-                        {isLoading ? (
-                            <ActivityIndicator size="large" color="#0000ff" />
-                        ) : (
-                            <Button
-                                title="Upload File"
-                                onPress={handleFileUpload}
-                            />
-                        )}
-                    </View>
+            <View style={[styles.stepContainer]}>
+                <Text style={[styles.stepNameStyle]}>1. Select File</Text>
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={handleFileUpload}
+                    style={[styles.stepRightContainer]}
+                >
+                    <Text
+                        numberOfLines={1}
+                        style={[
+                            {
+                                maxWidth: 100,
+                            },
+                        ]}
+                    >
+                        {fileName ?? "Upload File"}
+                    </Text>
+                    <Ionicons
+                        name="duplicate-outline"
+                        color={Colors.neutral.blue}
+                        size={24}
+                    />
+                </TouchableOpacity>
+            </View>
+            {isLoading && (
+                <View style={[styles.loader]}>
+                    <ActivityIndicator
+                        size="large"
+                        color={Colors.neutral.blue}
+                    />
                 </View>
             )}
+            {!isLoading && (
+                <View style={[styles.stepContainer]}>
+                    <Text style={[styles.stepNameStyle]}>2. Select Sheet</Text>
+                    <Dropdown
+                        list={sheetNameList}
+                        onChange={handleSheetSelection}
+                        selectedItem={selectedSheet}
+                    />
+                </View>
+            )}
+            {!isLoading && (
+                <View style={[styles.columnMapContainer]}>
+                    <Text style={[styles.stepNameStyle]}>
+                        3. Map Sheet Columns
+                    </Text>
 
-            {!_isNil(fileData) && !_isEmpty(fileData) && (
-                <View style={styles.dataContainer}>
-                    <View>
-                        <Filter
-                            searchValue={searchValue}
-                            handleSearch={handleSearch}
-                            selectedDate={selectedDate}
-                            onDayPress={onDayPress}
-                        />
-                    </View>
-                    <View style={styles.header}>
-                        <View style={[styles.btnStyle2]}>
-                            {isLoading ? (
-                                <ActivityIndicator
-                                    size="large"
-                                    color="#0000ff"
+                    <FlatList
+                        style={[styles.listContainer]}
+                        data={fieldList}
+                        keyExtractor={(item) => item.value}
+                        renderItem={({ item, index }) => (
+                            <TouchableOpacity
+                                style={styles.listItem}
+                                // onPress={() => handleSelect(item)}
+                            >
+                                <Text>{item.label}</Text>
+                                <Dropdown
+                                    list={selectedSheetColumnList}
+                                    selectedItem={
+                                        fieldList?.[index].selecedColumn
+                                    }
+                                    onChange={(value) => {
+                                        const updatedFiedList =
+                                            cloneDeep(fieldList);
+                                        updatedFiedList[index] = {
+                                            ...updatedFiedList[index],
+                                            selecedColumn: value,
+                                        };
+
+                                        setFieldList(updatedFiedList);
+                                    }}
                                 />
-                            ) : (
-                                <Button
-                                    title="Upload File"
-                                    onPress={handleFileUpload}
-                                />
-                            )}
-                        </View>
-                    </View>
-                    {!isLoading && (
-                        <FlatList
-                            contentContainerStyle={styles.listContainer}
-                            data={filteredData}
-                            ItemSeparatorComponent={() => (
-                                <View style={styles.horizontalLine} />
-                            )}
-                            keyExtractor={(item, index) =>
-                                item.id ?? String(index)
-                            }
-                            renderItem={({ item, index }) => {
-                                return (
-                                    <Card key={item?.id ?? index} data={item} />
-                                );
-                            }}
-                        />
-                    )}
+                            </TouchableOpacity>
+                        )}
+                    />
                 </View>
             )}
+            <View style={[{ width: "100%", alignItems: "center" }]}>
+                <View style={[{ width: "25%" }]}>
+                    <Button
+                        title="Import"
+                        color={Colors.neutral.blue}
+                        onPress={handleImport}
+                    />
+                </View>
+            </View>
         </SafeAreaView>
     );
 };
