@@ -1,13 +1,21 @@
-import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
+import {
+    FlatList,
+    Modal,
+    Text,
+    TouchableOpacity,
+    View,
+    findNodeHandle,
+    UIManager,
+} from "react-native";
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 import { styles } from "./Dropdown.styled";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/Colors";
 
 type DropdownProps = {
     list: any[];
+    multiple?: boolean;
     selectedItem?: Record<string, any> | string;
     modalStyle?: Record<string, any>;
     onChange: (value: any) => void;
@@ -18,11 +26,39 @@ export const Dropdown = ({
     selectedItem,
     modalStyle = {},
     onChange,
+    multiple = false,
 }: DropdownProps) => {
-    const [isVisible, setIsVisible] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [parentLayout, setParentLayout] = useState({
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    });
+
+    const boxRef = useRef<View>(null);
+
+    useEffect(() => {
+        // Call measure after a timeout to ensure layout is complete
+        setTimeout(handleMeasure, 100);
+    }, []);
+
+    const handleMeasure = () => {
+        if (!_isNil(boxRef?.current)) {
+            const handle = findNodeHandle(boxRef.current) ?? 0;
+            UIManager.measure(handle, (x, y, width, height, pageX, pageY) => {
+                setParentLayout({
+                    x: pageX,
+                    y: pageY,
+                    width,
+                    height,
+                });
+            });
+        }
+    };
 
     const handleSelect = (item: any) => {
-        setIsVisible(false);
+        setOpen(false);
         onChange(item);
     };
 
@@ -31,14 +67,15 @@ export const Dropdown = ({
             ? selectedItem
             : selectedItem?.label ?? "Select";
 
+    console.log("list==>", list, open);
+
     return (
-        <View style={styles.container}>
+        <View ref={boxRef} collapsable={false} style={[styles.container]}>
             <TouchableOpacity
                 style={styles.dropdown}
+                activeOpacity={1}
                 onPress={() => {
-                    if (!_isNil(list) && !_isEmpty(list)) {
-                        setIsVisible(true);
-                    }
+                    setOpen(true);
                 }}
             >
                 <Text>{selectedValue}</Text>
@@ -50,41 +87,41 @@ export const Dropdown = ({
             </TouchableOpacity>
 
             <Modal
-                visible={isVisible}
+                visible={open}
                 transparent
                 animationType="slide"
-                onRequestClose={() => setIsVisible(false)}
+                onRequestClose={() => setOpen(false)}
             >
-                <View style={[styles.modalOverlay, modalStyle]}>
-                    <View style={styles.modalContent}>
-                        <FlatList
-                            data={list}
-                            keyExtractor={(item, index) => index.toString()}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.item}
-                                    onPress={() => handleSelect(item)}
-                                >
-                                    <Text>{item}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </View>
-                {/* <View style={[styles.modalContainer]}>
+                <TouchableOpacity
+                    style={[styles.modalOverlay, modalStyle]}
+                    onPress={() => setOpen(false)}
+                    activeOpacity={1}
+                >
                     <FlatList
                         data={list}
+                        style={[
+                            styles.modalContent,
+                            {
+                                top: parentLayout.y + parentLayout.height + 4, // Align with parent's bottom
+                            },
+                        ]}
                         keyExtractor={(item, index) => index.toString()}
+                        ListEmptyComponent={
+                            <View style={[styles.emptyListContainer]}>
+                                <Text>No Data</Text>
+                            </View>
+                        }
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.item}
                                 onPress={() => handleSelect(item)}
+                                activeOpacity={1}
                             >
                                 <Text>{item}</Text>
                             </TouchableOpacity>
                         )}
                     />
-                </View> */}
+                </TouchableOpacity>
             </Modal>
         </View>
     );

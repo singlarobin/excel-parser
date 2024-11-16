@@ -53,6 +53,10 @@ export const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
+        setDefautlFieldList();
+    }, []);
+
+    const setDefautlFieldList = () => {
         const currFieldList = Object.entries(mapToFieldObj).map(
             ([key, value]) => ({
                 value: key,
@@ -60,7 +64,7 @@ export const HomeScreen = () => {
             })
         );
         setFieldList(currFieldList);
-    }, []);
+    };
 
     const selectFile = async (): Promise<string | null> => {
         try {
@@ -70,8 +74,6 @@ export const HomeScreen = () => {
                     "application/vnd.ms-excel", // MIME type for .xls
                 ],
             });
-
-            console.log("result ===>", result);
 
             if (!result.canceled) {
                 const fileName = result.assets?.[0].name.split(".")[0];
@@ -137,6 +139,9 @@ export const HomeScreen = () => {
             if (fileUri) {
                 await parseXLSX(fileUri);
 
+                setDefautlFieldList();
+                setSelectedSheet(undefined);
+                setSelectedSheetColumnList([]);
                 setIsLoading(false);
             } else {
                 setIsLoading(false);
@@ -153,6 +158,7 @@ export const HomeScreen = () => {
 
     const handleSheetSelection = (selectedSheet: any) => {
         setSelectedSheet(selectedSheet);
+        setDefautlFieldList();
 
         if (!_isNil(allSheetsData)) {
             const sheet = allSheetsData[selectedSheet];
@@ -260,9 +266,10 @@ export const HomeScreen = () => {
                     >
                         {fileName ?? "Upload File"}
                     </Text>
+
                     <Ionicons
                         name="duplicate-outline"
-                        color={Colors.neutral.blue}
+                        color={"gray"}
                         size={24}
                     />
                 </TouchableOpacity>

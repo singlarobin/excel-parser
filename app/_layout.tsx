@@ -31,12 +31,11 @@ export default function RootLayout() {
     useEffect(() => {
         if (loaded) {
             SplashScreen.hideAsync();
+            fetchData();
         }
     }, [loaded]);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useEffect(() => {}, []);
 
     const fetchData = async () => {
         const storedData = await loadLocalStorageData(parsedDataKey);

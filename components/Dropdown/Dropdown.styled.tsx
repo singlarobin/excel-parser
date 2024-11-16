@@ -1,7 +1,9 @@
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
-    container: {},
+    container: {
+        position: "relative",
+    },
     dropdown: {
         flexDirection: "row",
         padding: 8,
@@ -12,24 +14,20 @@ export const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        height: "30%",
-        width: "52%",
-        position: "absolute",
-        top: "23%",
-        right: "4%",
-        justifyContent: "center", // Centers vertically
-        alignItems: "center", // Centers horizontally
-        backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-        borderRadius: 4,
+        alignItems: "flex-end",
     },
     modalContent: {
-        backgroundColor: "#fff",
+        position: "absolute",
+        zIndex: 100,
+        right: 8,
+        backgroundColor: "white",
         borderRadius: 4,
-        elevation: 5, // Adds shadow on Android
-        shadowColor: "#000", // Adds shadow on iOS
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowRadius: 4,
+        elevation: 4,
+        maxHeight: 200,
     },
     item: {
         paddingHorizontal: 12,
@@ -38,5 +36,12 @@ export const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: "#ccc",
         width: 200,
+    },
+    emptyListContainer: {
+        padding: 8,
+        width: 200,
+        minHeight: 80,
+        alignItems: "center",
+        justifyContent: "center",
     },
 });

@@ -24,6 +24,12 @@ export const styles = StyleSheet.create({
     stepRightContainer: {
         flexDirection: "row",
         gap: 8,
+        justifyContent: "space-between",
+        borderWidth: 1,
+        borderRadius: 4,
+        width: 180,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
     },
     loader: {
         width: "100%",
@@ -44,6 +50,6 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         gap: 12,
         justifyContent: "space-between",
-        marginBottom: 8,
+        marginBottom: 20,
     },
 });

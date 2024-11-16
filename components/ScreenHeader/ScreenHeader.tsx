@@ -93,7 +93,7 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
     const handleModalItemClick = (type: string) => {
         setModalVisible(false);
         if (type === "uploadFile") {
-            saveLocalStorageData([], parsedDataKey);
+            // saveLocalStorageData([], parsedDataKey);
             router.push("/");
         } else if (type === "scheduleReminder") {
             requestPermissions();
