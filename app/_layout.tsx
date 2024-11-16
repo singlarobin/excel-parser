@@ -6,21 +6,24 @@ import {
 import { RootSiblingParent } from "react-native-root-siblings";
 
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View } from "react-native";
 import ScreenHeader from "@/components/ScreenHeader/ScreenHeader";
+import { loadLocalStorageData } from "@/utils/helperFunction";
+import { parsedDataKey } from "@/screens/CustomerData/constant";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
+    const router = useRouter();
+
     const [loaded] = useFonts({
         SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     });
@@ -30,6 +33,17 @@ export default function RootLayout() {
             SplashScreen.hideAsync();
         }
     }, [loaded]);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        const storedData = await loadLocalStorageData(parsedDataKey);
+        if (storedData) {
+            router.push("/CustomerListRoute");
+        }
+    };
 
     if (!loaded) {
         return null;

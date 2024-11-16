@@ -25,9 +25,10 @@ import { styles } from "./home.styled";
 import { Colors } from "@/constants/Colors";
 import { Dropdown } from "@/components/Dropdown/Dropdown";
 import { mapToFieldObj } from "./constant";
+import { useRouter } from "expo-router";
 
 export const HomeScreen = () => {
-    const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
+    const router = useRouter();
 
     const [fileName, setFileName] = useState<string>();
     const [selectedSheet, setSelectedSheet] = useState<string>();
@@ -103,7 +104,7 @@ export const HomeScreen = () => {
         } catch (error) {
             console.error("Error parsing XLSX file:", error);
             if (error instanceof Error) {
-                Toast.show(`Error parsing XLSX file=> ${error.message}`);
+                Toast.show(`Error parsing file=> ${error.message}`);
             }
             return null;
         }
@@ -151,7 +152,6 @@ export const HomeScreen = () => {
     };
 
     const handleSheetSelection = (selectedSheet: any) => {
-        console.log("selectedSheet==>", selectedSheet);
         setSelectedSheet(selectedSheet);
 
         if (!_isNil(allSheetsData)) {
@@ -197,30 +197,47 @@ export const HomeScreen = () => {
     };
 
     const handleImport = () => {
-        if (!_isNil(allSheetsData) && !_isNil(selectedSheet)) {
-            const sheet = allSheetsData[selectedSheet];
-            let data = XLSX.utils.sheet_to_json(sheet) as any[];
+        try {
+            if (!_isNil(allSheetsData) && !_isNil(selectedSheet)) {
+                const sheet = allSheetsData[selectedSheet];
+                let data = XLSX.utils.sheet_to_json(sheet) as any[];
 
-            data = convertDataBasedOnColumnMap(data);
+                data = convertDataBasedOnColumnMap(data);
 
-            console.log("handleImport ======>", data);
+                data = (data ?? []).map((obj) => {
+                    if (obj.hasOwnProperty("dueDate")) {
+                        return {
+                            ...obj,
+                            id: generateRandomId(),
+                            dueDate: convertExcelDateToJsIsoDateString(
+                                obj["dueDate"]
+                            ),
+                        };
+                    }
+                    return {
+                        ...obj,
+                        id: generateRandomId(),
+                    };
+                });
 
-            // data = (data ?? []).map((obj) => ({
-            //     ...obj,
-            //     id: generateRandomId(),
-            //     dueDate: convertExcelDateToJsIsoDateString(obj["dueDate"]),
-            // }));
+                if (data?.[0].hasOwnProperty("dueDate")) {
+                    (data ?? []).sort((a, b) => {
+                        const dateA = new Date(a["dueDate"]);
+                        const dateB = new Date(b["dueDate"]);
 
-            // (data ?? []).sort((a, b) => {
-            //     const dateA = new Date(a["dueDate"]);
-            //     const dateB = new Date(b["dueDate"]);
+                        return (
+                            (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0)
+                        ); // Ascending order
+                    });
+                }
 
-            //     return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
-            // });
-
-            // setFileData(data ?? []);
-
-            // saveLocalStorageData(data ?? [], parsedDataKey);
+                saveLocalStorageData(data ?? [], parsedDataKey);
+                router.push("/CustomerListRoute");
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                Toast.show(`Import Error => ${error.message}`);
+            }
         }
     };
 

@@ -49,7 +49,12 @@ export const Dropdown = ({
                 />
             </TouchableOpacity>
 
-            <Modal visible={isVisible} transparent animationType="slide">
+            <Modal
+                visible={isVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setIsVisible(false)}
+            >
                 <View style={[styles.modalOverlay, modalStyle]}>
                     <View style={styles.modalContent}>
                         <FlatList

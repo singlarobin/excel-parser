@@ -3,6 +3,7 @@ import Toast from "react-native-root-toast";
 import { Ionicons } from "@expo/vector-icons";
 
 import _isNil from "lodash/isNil";
+import _isEmpty from "lodash/isEmpty";
 
 import { styles } from "./card.styled";
 import { formatIsoDate } from "@/utils/helperFunction";
@@ -12,12 +13,16 @@ type CardProps = {
 };
 
 export const Card = ({ data }: CardProps) => {
-    const { Phone } = data;
+    const { phone } = data;
 
     const dialPhoneNumber = (phoneNumber: string) => {
         const url = `tel:${phoneNumber}`;
 
-        if (phoneNumber !== "-" && !_isNil(phoneNumber)) {
+        if (
+            phoneNumber !== "-" &&
+            !_isNil(phoneNumber) &&
+            !_isEmpty(phoneNumber)
+        ) {
             Linking.canOpenURL(url)
                 .then((supported) => {
                     if (supported) {
@@ -44,49 +49,51 @@ export const Card = ({ data }: CardProps) => {
             <View style={styles.leftContainer}>
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>Name:</Text>
-                    <Text> {`${data["Head of Account"] ?? "-"}`}</Text>
+                    <Text> {`${data["name"] ?? "-"}`}</Text>
                 </View>
 
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>Phone:</Text>
-                    <Text> {`${data["Phone"] ?? "-"}`}</Text>
+                    <Text> {`${data["phone"] ?? "-"}`}</Text>
                 </View>
 
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>City Name:</Text>
-                    <Text> {`${data["City Name"] ?? "-"}`}</Text>
+                    <Text> {`${data["city"] ?? "-"}`}</Text>
                 </View>
 
                 <View style={styles.inlineStyle}>
                     <Text style={styles.headerText}>Plumber:</Text>
-                    <Text> {`${data["pl"] ?? "-"}`}</Text>
+                    <Text> {`${data["plumber"] ?? "-"}`}</Text>
                 </View>
             </View>
             <View style={styles.rightContainer}>
-                <TouchableOpacity onPress={() => dialPhoneNumber(Phone)}>
+                <TouchableOpacity onPress={() => dialPhoneNumber(phone)}>
                     <Ionicons name="call-sharp" size={20} color={"blue"} />
                 </TouchableOpacity>
 
                 <View style={styles.inlineStyle}>
                     <Text style={[styles.headerText]}>Balance:</Text>
-                    <Text>{`${data["Balance"] ?? "-"}`}</Text>
+                    <Text>{`${data["balance"] ?? "-"}`}</Text>
                 </View>
 
-                <View style={styles.inlineStyle}>
+                {/* <View style={styles.inlineStyle}>
                     <Text style={[styles.headerText, styles.redText]}>
                         Date:
                     </Text>
                     <Text style={[styles.redText]}>{`${
                         data["Date"] ?? "N/A"
                     }`}</Text>
-                </View>
+                </View> */}
 
                 <View style={styles.inlineStyle}>
                     <Text style={[styles.headerText, styles.redText]}>
-                        DD1:
+                        Due Date:
                     </Text>
                     <Text style={[styles.redText]}>{`${
-                        formatIsoDate(data["DD1"]) ?? "N/A"
+                        !_isNil(data["dueDate"]) && !_isEmpty(data["dueDate"])
+                            ? formatIsoDate(data["dueDate"])
+                            : "-"
                     }`}</Text>
                 </View>
             </View>
