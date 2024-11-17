@@ -54,7 +54,11 @@ export const Filter = ({
                 animationType="slide"
                 onRequestClose={() => setCalendarVisible(false)}
             >
-                <View style={styles.modalBackground}>
+                <TouchableOpacity
+                    activeOpacity={1}
+                    style={styles.modalBackground}
+                    onPress={() => setCalendarVisible(false)}
+                >
                     <View style={styles.calendarContainer}>
                         <Calendar
                             onDayPress={handleDayPress}
@@ -84,7 +88,7 @@ export const Filter = ({
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </TouchableOpacity>
             </Modal>
         </View>
     );

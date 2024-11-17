@@ -1,4 +1,11 @@
-import { Text, View, Linking, Alert, TouchableOpacity } from "react-native";
+import {
+    Text,
+    View,
+    Linking,
+    Alert,
+    TouchableOpacity,
+    Modal,
+} from "react-native";
 import Toast from "react-native-root-toast";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -7,13 +14,18 @@ import _isEmpty from "lodash/isEmpty";
 
 import { styles } from "./card.styled";
 import { formatIsoDate } from "@/utils/helperFunction";
+import { useState } from "react";
 
 type CardProps = {
     data: Record<string, any>;
+    index: number;
+    setCustomerDetailIndex: (index: number) => void;
 };
 
-export const Card = ({ data }: CardProps) => {
+export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
     const { phone } = data;
+
+    const [modalVisible, setModalVisible] = useState(false);
 
     const dialPhoneNumber = (phoneNumber: string) => {
         const url = `tel:${phoneNumber}`;
@@ -68,9 +80,21 @@ export const Card = ({ data }: CardProps) => {
                 </View>
             </View>
             <View style={styles.rightContainer}>
-                <TouchableOpacity onPress={() => dialPhoneNumber(phone)}>
-                    <Ionicons name="call-sharp" size={20} color={"blue"} />
-                </TouchableOpacity>
+                <View style={[styles.iconsContainer]}>
+                    <TouchableOpacity
+                        onPress={() => setCustomerDetailIndex(index)}
+                    >
+                        <Ionicons
+                            name="create-outline"
+                            size={20}
+                            color={"blue"}
+                        />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => dialPhoneNumber(phone)}>
+                        <Ionicons name="call-sharp" size={20} color={"blue"} />
+                    </TouchableOpacity>
+                </View>
 
                 <View style={styles.inlineStyle}>
                     <Text style={[styles.headerText]}>Balance:</Text>

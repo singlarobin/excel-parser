@@ -27,4 +27,9 @@ export const styles = StyleSheet.create({
     redText: {
         color: "red",
     },
+    iconsContainer: {
+        flexDirection: "row",
+        gap: 8,
+        justifyContent: "flex-end",
+    },
 });

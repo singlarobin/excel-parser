@@ -14,9 +14,11 @@ import {
     loadLocalStorageData,
     formatDate,
     formatIsoDate,
+    saveLocalStorageData,
 } from "@/utils/helperFunction";
 import { parsedDataKey } from "./constant";
 import { Filter } from "./component/Filter/Filter";
+import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
 
 export const CustomerListScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
@@ -26,6 +28,7 @@ export const CustomerListScreen = () => {
 
     const [searchValue, setSearchValue] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
+    const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
 
     useEffect(() => {
         fetchData();
@@ -104,6 +107,33 @@ export const CustomerListScreen = () => {
         debounceListFiltering("dueDate", dateString);
     };
 
+    const updateFileData = (data: Record<string, any>) => {
+        const updatedFileData = fileData.map((obj, index) => {
+            if (customerDetailIndex === index) {
+                return {
+                    ...data,
+                    isUpdated: true,
+                };
+            }
+
+            return obj;
+        });
+
+        setFileData(updatedFileData);
+        saveLocalStorageData(updatedFileData ?? [], parsedDataKey);
+
+        setCustomerDetailIndex(undefined);
+    };
+
+    if (!_isNil(customerDetailIndex)) {
+        return (
+            <DetailUpdate
+                data={fileData[customerDetailIndex]}
+                updateData={updateFileData}
+            />
+        );
+    }
+
     return (
         <SafeAreaView style={[styles.container]}>
             {(_isNil(fileData) || _isEmpty(fileData)) && (
@@ -135,7 +165,14 @@ export const CustomerListScreen = () => {
                             }
                             renderItem={({ item, index }) => {
                                 return (
-                                    <Card key={item?.id ?? index} data={item} />
+                                    <Card
+                                        key={item?.id ?? index}
+                                        data={item}
+                                        index={index}
+                                        setCustomerDetailIndex={
+                                            setCustomerDetailIndex
+                                        }
+                                    />
                                 );
                             }}
                         />
