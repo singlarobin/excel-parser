@@ -12,9 +12,9 @@ import _isEmpty from "lodash/isEmpty";
 import { usePathname, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
 
 import {
+    getDataToScheduleReminder,
     loadLocalStorageData,
     saveLocalStorageData,
 } from "@/utils/helperFunction";
@@ -33,7 +33,7 @@ Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
-        shouldSetBadge: true,
+        shouldSetBadge: false,
     }),
 });
 
@@ -50,44 +50,40 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
         } else {
             const storedData: any[] = await loadLocalStorageData(parsedDataKey);
             if (!_isNil(storedData) && !_isEmpty(storedData)) {
-                storedData.forEach((obj) => {
-                    if (!_isNil(obj["dueDate"]) && !_isEmpty(obj["dueDate"])) {
-                        scheduleReminder(obj);
-                    }
+                const pArr = storedData.map((obj) => {
+                    return new Promise(async (resolve) => {
+                        if (
+                            !_isNil(obj["dueDate"]) &&
+                            !_isEmpty(obj["dueDate"])
+                        ) {
+                            const notififcationId = await scheduleReminder(obj);
+                            resolve({
+                                ...obj,
+                                notififcationId,
+                            });
+                        }
+
+                        resolve(obj);
+                    });
                 });
 
-                Toast.show("Reminder scheduled for all users");
+                Promise.all(pArr).then((values) => {
+                    saveLocalStorageData(values ?? [], parsedDataKey);
+
+                    Toast.show("Reminder scheduled for all users");
+                });
             }
         }
     }
 
     async function scheduleReminder(obj: Record<string, any>) {
-        const { name, phone, balance, dueDate } = obj;
-        // Combine date and time into a single Date object
-        const reminderDate = new Date(dueDate);
-        // const [hours, minutes] = time.split(":").map(Number);
-        reminderDate.setHours(15, 8);
-
-        let body = "This is your scheduled reminder!";
-
-        if (!_isNil(name) && !_isEmpty(name)) {
-            body = `Connect with ${name}`;
-
-            if (!_isNil(balance)) {
-                body += ` for the pending amount: ${balance}`;
-            }
-        }
-
+        const notificationContent = getDataToScheduleReminder(obj);
         // Schedule notification
-        await Notifications.scheduleNotificationAsync({
-            content: {
-                title: "Balance Connect",
-                body,
-                data: obj,
-                priority: "high", // Set priority for visibility
-            },
-            trigger: reminderDate,
-        });
+        const id = await Notifications.scheduleNotificationAsync(
+            notificationContent
+        );
+
+        return id;
     }
 
     const handleModalItemClick = (type: string) => {

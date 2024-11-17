@@ -2,6 +2,7 @@ import { View, FlatList, Text, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DateData } from "react-native-calendars";
+import * as Notifications from "expo-notifications";
 
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
@@ -15,10 +16,19 @@ import {
     formatDate,
     formatIsoDate,
     saveLocalStorageData,
+    getDataToScheduleReminder,
 } from "@/utils/helperFunction";
 import { parsedDataKey } from "./constant";
 import { Filter } from "./component/Filter/Filter";
 import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
+
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+    }),
+});
 
 export const CustomerListScreen = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
@@ -107,11 +117,45 @@ export const CustomerListScreen = () => {
         debounceListFiltering("dueDate", dateString);
     };
 
-    const updateFileData = (data: Record<string, any>) => {
+    const cancelNotification = async (notificationId: string) => {
+        if (!_isEmpty(notificationId)) {
+            await Notifications.cancelScheduledNotificationAsync(
+                notificationId
+            );
+            console.log("Notification Cancelled:", notificationId);
+        } else {
+            console.log("No notification to cancel.");
+        }
+    };
+
+    const updateNotificationReminder = async (data: Record<string, any>) => {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted") {
+            alert("You need to enable permissions for notifications to work!");
+        } else {
+            const { notificationId } = data;
+
+            await cancelNotification(notificationId);
+
+            const notificationContent = getDataToScheduleReminder(data);
+            const id = await Notifications.scheduleNotificationAsync(
+                notificationContent
+            );
+
+            return id;
+        }
+
+        return "";
+    };
+
+    const updateFileData = async (data: Record<string, any>) => {
+        const notificationId = await updateNotificationReminder(data);
+
         const updatedFileData = fileData.map((obj, index) => {
             if (customerDetailIndex === index) {
                 return {
                     ...data,
+                    notificationId,
                     isUpdated: true,
                 };
             }

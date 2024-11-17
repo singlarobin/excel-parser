@@ -14,12 +14,17 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import XLSX, { WorkSheet } from "xlsx";
+import * as Notifications from "expo-notifications";
 
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 import cloneDeep from "lodash/cloneDeep";
 
-import { generateRandomId, saveLocalStorageData } from "@/utils/helperFunction";
+import {
+    generateRandomId,
+    loadLocalStorageData,
+    saveLocalStorageData,
+} from "@/utils/helperFunction";
 import { parsedDataKey } from "../CustomerData/constant";
 import { styles } from "./home.styled";
 import { Colors } from "@/constants/Colors";
@@ -202,7 +207,13 @@ export const HomeScreen = () => {
         });
     };
 
-    const handleImport = () => {
+    const cancelOldNotifications = async (notificationIds: string[]) => {
+        notificationIds.forEach(async (id) => {
+            await Notifications.cancelScheduledNotificationAsync(id);
+        });
+    };
+
+    const handleImport = async () => {
         try {
             if (!_isNil(allSheetsData) && !_isNil(selectedSheet)) {
                 const sheet = allSheetsData[selectedSheet];
@@ -210,20 +221,60 @@ export const HomeScreen = () => {
 
                 data = convertDataBasedOnColumnMap(data);
 
+                const storedData: any[] = await loadLocalStorageData(
+                    parsedDataKey
+                );
+
+                const notificationIdsToCancel: string[] = [];
+
+                // Convert the already stored local data to map and get all scheduled notification ids for cancellation
+                const storedDataMap: Record<string, any> = storedData.reduce(
+                    (acc: Record<string, any>, obj) => {
+                        if (
+                            !_isNil(obj["notificationId"]) &&
+                            !_isEmpty(obj["notificationId"])
+                        ) {
+                            notificationIdsToCancel.push(obj["notificationId"]);
+                        }
+
+                        return {
+                            ...acc,
+                            [obj["id"]]: obj,
+                        };
+                    },
+                    {}
+                );
+
+                cancelOldNotifications(notificationIdsToCancel);
+
                 data = (data ?? []).map((obj) => {
                     if (obj.hasOwnProperty("dueDate")) {
-                        return {
+                        obj = {
                             ...obj,
-                            id: generateRandomId(),
                             dueDate: convertExcelDateToJsIsoDateString(
                                 obj["dueDate"]
                             ),
                         };
                     }
-                    return {
-                        ...obj,
-                        id: generateRandomId(),
-                    };
+
+                    if (!obj.hasOwnProperty("id")) {
+                        obj = {
+                            ...obj,
+                            id: generateRandomId(),
+                        };
+                    }
+
+                    // If stored Data has Due Date updated then retain that date
+                    if (
+                        storedDataMap.hasOwnProperty(obj["id"]) &&
+                        storedDataMap[obj["id"]]["isUpdated"]
+                    ) {
+                        obj = {
+                            ...obj,
+                            dueDate: storedDataMap[obj["id"]]["dueDate"],
+                        };
+                    }
+                    return obj;
                 });
 
                 if (data?.[0].hasOwnProperty("dueDate")) {

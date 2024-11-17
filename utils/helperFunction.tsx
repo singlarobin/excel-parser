@@ -1,4 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+
+import _isNil from "lodash/isNil";
+import _isEmpty from "lodash/isEmpty";
+
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+    }),
+});
 
 // Save Data
 export const saveLocalStorageData = async (data: any, storageKey: string) => {
@@ -49,4 +61,32 @@ export const formatIsoDate = (
     }
 
     return `${year}-${month}-${day}`;
+};
+
+export const getDataToScheduleReminder = (obj: Record<string, any>) => {
+    const { name, phone, balance, dueDate } = obj;
+    // Combine date and time into a single Date object
+    const reminderDate = new Date(dueDate);
+    // const [hours, minutes] = time.split(":").map(Number);
+    reminderDate.setHours(16, 50);
+
+    let body = "This is your scheduled reminder!";
+
+    if (!_isNil(name) && !_isEmpty(name)) {
+        body = `Connect with ${name}`;
+
+        if (!_isNil(balance)) {
+            body += ` for the pending amount: ${balance}`;
+        }
+    }
+
+    return {
+        content: {
+            title: "Balance Connect",
+            body,
+            data: obj,
+            priority: "high", // Set priority for visibility
+        },
+        trigger: reminderDate,
+    };
 };
