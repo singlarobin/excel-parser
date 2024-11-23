@@ -228,8 +228,8 @@ export const HomeScreen = () => {
                 const notificationIdsToCancel: string[] = [];
 
                 // Convert the already stored local data to map and get all scheduled notification ids for cancellation
-                const storedDataMap: Record<string, any> = storedData.reduce(
-                    (acc: Record<string, any>, obj) => {
+                const storedDataMap: Record<string, any> =
+                    storedData?.reduce((acc: Record<string, any>, obj) => {
                         if (
                             !_isNil(obj["notificationId"]) &&
                             !_isEmpty(obj["notificationId"])
@@ -241,11 +241,9 @@ export const HomeScreen = () => {
                             ...acc,
                             [obj["id"]]: obj,
                         };
-                    },
-                    {}
-                );
+                    }, {}) ?? {};
 
-                cancelOldNotifications(notificationIdsToCancel);
+                await cancelOldNotifications(notificationIdsToCancel);
 
                 data = (data ?? []).map((obj) => {
                     if (obj.hasOwnProperty("dueDate")) {

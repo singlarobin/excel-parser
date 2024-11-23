@@ -25,16 +25,10 @@ type CardProps = {
 export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
     const { phone } = data;
 
-    const [modalVisible, setModalVisible] = useState(false);
-
     const dialPhoneNumber = (phoneNumber: string) => {
         const url = `tel:${phoneNumber}`;
 
-        if (
-            phoneNumber !== "-" &&
-            !_isNil(phoneNumber) &&
-            !_isEmpty(phoneNumber)
-        ) {
+        if (phoneNumber !== "-" && !_isNil(phoneNumber)) {
             Linking.canOpenURL(url)
                 .then((supported) => {
                     if (supported) {
@@ -50,7 +44,8 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
                     console.error("Error opening dialer:", error)
                 );
         } else {
-            Toast.show("Invalid Phone number", {
+            const url = `tel:${phoneNumber}`;
+            Toast.show(`Invalid Phone number: ${phoneNumber}`, {
                 duration: Toast.durations.SHORT,
             });
         }

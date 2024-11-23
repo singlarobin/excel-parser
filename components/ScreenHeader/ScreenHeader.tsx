@@ -126,6 +126,7 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
                         <TouchableOpacity
                             style={[styles.overlay]}
                             onPress={() => setModalVisible(false)}
+                            activeOpacity={1}
                         >
                             <View style={styles.menu}>
                                 {!isHomePath && (

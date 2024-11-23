@@ -1,4 +1,10 @@
-import { View, FlatList, Text, BackHandler } from "react-native";
+import {
+    View,
+    FlatList,
+    Text,
+    BackHandler,
+    ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DateData } from "react-native-calendars";
@@ -21,6 +27,7 @@ import {
 import { parsedDataKey } from "./constant";
 import { Filter } from "./component/Filter/Filter";
 import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
+import { Colors } from "@/constants/Colors";
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -36,6 +43,8 @@ export const CustomerListScreen = () => {
         Array<Record<string, any>>
     >([]);
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const [searchValue, setSearchValue] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
@@ -50,7 +59,12 @@ export const CustomerListScreen = () => {
 
     useEffect(() => {
         const backAction = () => {
-            BackHandler.exitApp();
+            if (!_isNil(customerDetailIndex)) {
+                setCustomerDetailIndex(undefined);
+            } else {
+                BackHandler.exitApp();
+            }
+
             return true; // Prevent default behavior
         };
 
@@ -60,10 +74,12 @@ export const CustomerListScreen = () => {
         );
 
         return () => backHandler.remove();
-    }, []);
+    }, [customerDetailIndex]);
 
     const fetchData = async () => {
+        setIsLoading(true);
         const storedData = await loadLocalStorageData(parsedDataKey);
+        setIsLoading(false);
         if (storedData) {
             setFileData(storedData);
         }
@@ -182,7 +198,14 @@ export const CustomerListScreen = () => {
         <SafeAreaView style={[styles.container]}>
             {(_isNil(fileData) || _isEmpty(fileData)) && (
                 <View style={[styles.emptyDataContainer]}>
-                    <Text>No Data</Text>
+                    {isLoading ? (
+                        <ActivityIndicator
+                            size={"large"}
+                            color={Colors.neutral.blue}
+                        />
+                    ) : (
+                        <Text>No Data</Text>
+                    )}
                 </View>
             )}
 
@@ -197,30 +220,28 @@ export const CustomerListScreen = () => {
                         />
                     </View>
 
-                    {
-                        <FlatList
-                            contentContainerStyle={styles.listContainer}
-                            data={filteredData}
-                            ItemSeparatorComponent={() => (
-                                <View style={styles.horizontalLine} />
-                            )}
-                            keyExtractor={(item, index) =>
-                                item.id ?? String(index)
-                            }
-                            renderItem={({ item, index }) => {
-                                return (
-                                    <Card
-                                        key={item?.id ?? index}
-                                        data={item}
-                                        index={index}
-                                        setCustomerDetailIndex={
-                                            setCustomerDetailIndex
-                                        }
-                                    />
-                                );
-                            }}
-                        />
-                    }
+                    <FlatList
+                        contentContainerStyle={styles.listContainer}
+                        data={filteredData}
+                        ItemSeparatorComponent={() => (
+                            <View style={styles.horizontalLine} />
+                        )}
+                        keyExtractor={(item, index) =>
+                            item?.id ?? String(index)
+                        }
+                        renderItem={({ item, index }) => {
+                            return (
+                                <Card
+                                    key={item?.id ?? index}
+                                    data={item}
+                                    index={index}
+                                    setCustomerDetailIndex={
+                                        setCustomerDetailIndex
+                                    }
+                                />
+                            );
+                        }}
+                    />
                 </View>
             )}
         </SafeAreaView>

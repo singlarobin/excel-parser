@@ -17,7 +17,6 @@ export const saveLocalStorageData = async (data: any, storageKey: string) => {
     try {
         const jsonData = JSON.stringify(data);
         await AsyncStorage.setItem(storageKey, jsonData);
-        console.log("Data saved successfully!");
     } catch (error) {
         console.error("Error saving data:", error);
     }
@@ -29,7 +28,6 @@ export const loadLocalStorageData = async (storageKey: string) => {
         const jsonData = await AsyncStorage.getItem(storageKey);
         if (jsonData !== null) {
             const data = JSON.parse(jsonData);
-            console.log("Data loaded successfully!", data);
             return data;
         }
     } catch (error) {
@@ -64,11 +62,14 @@ export const formatIsoDate = (
 };
 
 export const getDataToScheduleReminder = (obj: Record<string, any>) => {
-    const { name, phone, balance, dueDate } = obj;
+    const { name, balance, dueDate } = obj;
     // Combine date and time into a single Date object
     const reminderDate = new Date(dueDate);
-    // const [hours, minutes] = time.split(":").map(Number);
-    reminderDate.setHours(16, 50);
+
+    const hourToSet = Math.floor(Math.random() * (18 - 11 + 1)) + 11;
+    const minuteToSet = Math.floor(Math.random() * (60 - 5 + 1)) + 5;
+
+    reminderDate.setHours(hourToSet, minuteToSet);
 
     let body = "This is your scheduled reminder!";
 

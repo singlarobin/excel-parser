@@ -67,8 +67,6 @@ export const Dropdown = ({
             ? selectedItem
             : selectedItem?.label ?? "Select";
 
-    console.log("list==>", list, open);
-
     return (
         <View ref={boxRef} collapsable={false} style={[styles.container]}>
             <TouchableOpacity
