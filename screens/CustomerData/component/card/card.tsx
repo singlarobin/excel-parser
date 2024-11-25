@@ -36,7 +36,7 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
                     } else {
                         Alert.alert(
                             "Error",
-                            "Unable to open dialer on this device."
+                            `This device cannot open the dialer. Please call manually: ${phoneNumber}`
                         );
                     }
                 })
@@ -44,7 +44,6 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
                     console.error("Error opening dialer:", error)
                 );
         } else {
-            const url = `tel:${phoneNumber}`;
             Toast.show(`Invalid Phone number: ${phoneNumber}`, {
                 duration: Toast.durations.SHORT,
             });

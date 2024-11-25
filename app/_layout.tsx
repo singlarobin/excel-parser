@@ -4,7 +4,7 @@ import {
     ThemeProvider,
 } from "@react-navigation/native";
 import { RootSiblingParent } from "react-native-root-siblings";
-import { AppState, AppStateStatus, Linking } from "react-native";
+import { Alert, AppState, AppStateStatus, Linking } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 
@@ -79,13 +79,19 @@ export default function RootLayout() {
 
     const dialPhone = (phoneNumber: string) => {
         const url = `tel:${phoneNumber}`;
-        Linking.canOpenURL(url).then((supported) => {
-            if (supported) {
-                Linking.openURL(url);
-            } else {
-                console.log("Phone dialing is not supported on this device.");
-            }
-        });
+
+        Linking.canOpenURL(url)
+            .then((supported) => {
+                if (supported) {
+                    return Linking.openURL(url);
+                } else {
+                    Alert.alert(
+                        "Error",
+                        `This device cannot open the dialer. Please call manually: ${phoneNumber}`
+                    );
+                }
+            })
+            .catch((error) => console.error("Error opening dialer:", error));
     };
 
     const fetchData = async () => {
