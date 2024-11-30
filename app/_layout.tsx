@@ -54,12 +54,10 @@ export default function RootLayout() {
             Notifications.addNotificationResponseReceivedListener(
                 async (response) => {
                     await fetchData();
-                    // router.push("/CustomerListRoute");
 
                     const phoneNumber =
                         response.notification.request.content.data.phone;
                     if (phoneNumber) {
-                        console.log("==> dial");
                         dialPhone(phoneNumber);
                     }
                 }
