@@ -53,9 +53,9 @@ export const CustomerListScreen = () => {
         fetchData();
     }, []);
 
-    useEffect(() => {
-        setFilteredData(fileData);
-    }, [JSON.stringify(fileData)]);
+    // useEffect(() => {
+    //     setFilteredData(fileData);
+    // }, [JSON.stringify(fileData)]);
 
     useEffect(() => {
         const backAction = () => {
@@ -82,6 +82,7 @@ export const CustomerListScreen = () => {
         setIsLoading(false);
         if (storedData) {
             setFileData(storedData);
+            setFilteredData(storedData);
         }
     };
 
@@ -179,7 +180,21 @@ export const CustomerListScreen = () => {
             return obj;
         });
 
+        const updatedFilterData = filteredData.map((obj, index) => {
+            if (customerDetailIndex === index) {
+                return {
+                    ...data,
+                    notificationId,
+                    isUpdated: true,
+                };
+            }
+
+            return obj;
+        });
+
         setFileData(updatedFileData);
+        setFilteredData(updatedFilterData);
+
         saveLocalStorageData(updatedFileData ?? [], parsedDataKey);
 
         setCustomerDetailIndex(undefined);
@@ -193,6 +208,9 @@ export const CustomerListScreen = () => {
             />
         );
     }
+
+    const hasNameMapped = "name" in (fileData?.[0] ?? {});
+    const hasDateMapped = "dueDate" in (fileData?.[0] ?? {});
 
     return (
         <SafeAreaView style={[styles.container]}>
@@ -217,6 +235,8 @@ export const CustomerListScreen = () => {
                             handleSearch={handleSearch}
                             selectedDate={selectedDate}
                             onDayPress={onDayPress}
+                            hasNameMapped={hasNameMapped}
+                            hasDateMapped={hasDateMapped}
                         />
                     </View>
 

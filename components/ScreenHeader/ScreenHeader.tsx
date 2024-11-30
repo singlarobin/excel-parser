@@ -43,6 +43,17 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
 
     const [modalVisible, setModalVisible] = useState(false);
 
+    const cancelNotification = async (notificationId: string) => {
+        if (!_isEmpty(notificationId)) {
+            await Notifications.cancelScheduledNotificationAsync(
+                notificationId
+            );
+            console.log("Notification Cancelled:", notificationId);
+        } else {
+            console.log("No notification to cancel.");
+        }
+    };
+
     async function requestPermissions() {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== "granted") {
@@ -52,6 +63,13 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
             if (!_isNil(storedData) && !_isEmpty(storedData)) {
                 const pArr = storedData.map((obj) => {
                     return new Promise(async (resolve) => {
+                        if (
+                            !_isNil(obj.notififcationId) &&
+                            !_isEmpty(obj.notifcationId)
+                        ) {
+                            await cancelNotification(obj.notififcationId);
+                        }
+
                         if (
                             !_isNil(obj["dueDate"]) &&
                             !_isEmpty(obj["dueDate"])
@@ -93,6 +111,8 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
             router.push("/");
         } else if (type === "scheduleReminder") {
             requestPermissions();
+        } else if (type === "openUserManual") {
+            router.push("/UserManualRoute");
         }
     };
 

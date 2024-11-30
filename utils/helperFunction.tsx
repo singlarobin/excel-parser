@@ -66,8 +66,14 @@ export const getDataToScheduleReminder = (obj: Record<string, any>) => {
     // Combine date and time into a single Date object
     const reminderDate = new Date(dueDate);
 
-    const hourToSet = Math.floor(Math.random() * (18 - 11 + 1)) + 11;
-    const minuteToSet = Math.floor(Math.random() * (60 - 5 + 1)) + 5;
+    const currentDate = new Date();
+    const currentHour = currentDate.getHours();
+    const currentMinute = currentDate.getMinutes();
+
+    const hourToSet =
+        Math.floor(Math.random() * (18 - currentHour + 1)) + currentHour;
+    const minuteToSet =
+        Math.floor(Math.random() * (60 - currentMinute + 1)) + currentMinute;
 
     reminderDate.setHours(hourToSet, minuteToSet);
 

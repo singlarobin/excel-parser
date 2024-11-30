@@ -30,10 +30,11 @@ import { styles } from "./home.styled";
 import { Colors } from "@/constants/Colors";
 import { Dropdown } from "@/components/Dropdown/Dropdown";
 import { mapToFieldObj } from "./constant";
-import { useRouter } from "expo-router";
+import { useRootNavigationState, useRouter } from "expo-router";
 
 export const HomeScreen = () => {
     const router = useRouter();
+    const state = useRootNavigationState();
 
     const [fileName, setFileName] = useState<string>();
     const [selectedSheet, setSelectedSheet] = useState<string>();
@@ -59,6 +60,16 @@ export const HomeScreen = () => {
 
     useEffect(() => {
         setDefautlFieldList();
+
+        // console.log("===>", state.routes);
+
+        // if (
+        //     !_isNil(state.routes) &&
+        //     !_isEmpty(state.routes) &&
+        //     state.routes.length <= 1
+        // ) {
+        //     void fetchData();
+        // }
     }, []);
 
     const setDefautlFieldList = () => {
@@ -70,6 +81,15 @@ export const HomeScreen = () => {
         );
         setFieldList(currFieldList);
     };
+
+    // const fetchData = async () => {
+    //     const storedData = await loadLocalStorageData(parsedDataKey);
+
+    //     if (!_isNil(storedData) && !_isEmpty(storedData)) {
+    //         console.log("===> push");
+    //         router.push("/CustomerListRoute");
+    //     }
+    // };
 
     const selectFile = async (): Promise<string | null> => {
         try {

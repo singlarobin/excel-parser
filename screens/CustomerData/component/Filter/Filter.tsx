@@ -11,6 +11,8 @@ type FilterProps = {
     handleSearch: (text: string) => void;
     selectedDate: string;
     onDayPress: (day: DateData | string) => void;
+    hasDateMapped: boolean;
+    hasNameMapped: boolean;
 };
 
 export const Filter = ({
@@ -18,6 +20,8 @@ export const Filter = ({
     handleSearch,
     selectedDate,
     onDayPress,
+    hasDateMapped,
+    hasNameMapped,
 }: FilterProps) => {
     const [isCalendarVisible, setCalendarVisible] = useState(false);
 
@@ -33,21 +37,25 @@ export const Filter = ({
 
     return (
         <View style={[styles.container]}>
-            <TextInput
-                placeholder={"Search By Name"}
-                style={[styles.searchBox]}
-                autoFocus={false}
-                autoCapitalize={"none"}
-                value={searchValue}
-                onChangeText={handleSearch}
-            />
-            <TouchableOpacity
-                style={[styles.dateContainer]}
-                activeOpacity={1}
-                onPress={() => setCalendarVisible(true)}
-            >
-                <Text>{dateToShow || "Select Date"}</Text>
-            </TouchableOpacity>
+            {hasNameMapped && (
+                <TextInput
+                    placeholder={"Search By Name"}
+                    style={[styles.searchBox]}
+                    autoFocus={false}
+                    autoCapitalize={"none"}
+                    value={searchValue}
+                    onChangeText={handleSearch}
+                />
+            )}
+            {hasDateMapped && (
+                <TouchableOpacity
+                    style={[styles.dateContainer]}
+                    activeOpacity={1}
+                    onPress={() => setCalendarVisible(true)}
+                >
+                    <Text>{dateToShow || "Select Date"}</Text>
+                </TouchableOpacity>
+            )}
             <Modal
                 visible={isCalendarVisible}
                 transparent={true}

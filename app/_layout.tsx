@@ -9,7 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 
 import { useFonts } from "expo-font";
-import { Slot, Stack, usePathname, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import "react-native-reanimated";
@@ -52,10 +52,14 @@ export default function RootLayout() {
 
         const subscription =
             Notifications.addNotificationResponseReceivedListener(
-                (response) => {
+                async (response) => {
+                    await fetchData();
+                    // router.push("/CustomerListRoute");
+
                     const phoneNumber =
                         response.notification.request.content.data.phone;
                     if (phoneNumber) {
+                        console.log("==> dial");
                         dialPhone(phoneNumber);
                     }
                 }
@@ -69,12 +73,12 @@ export default function RootLayout() {
     }, []);
 
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-        if (nextAppState === "active") {
-            void fetchData();
-            // Add your foreground logic here
-        } else {
-            setIsReady(false);
-        }
+        // if (nextAppState === "active") {
+        //     void fetchData();
+        //     // Add your foreground logic here
+        // } else {
+        //     setIsReady(false);
+        // }
     };
 
     const dialPhone = (phoneNumber: string) => {
@@ -98,10 +102,8 @@ export default function RootLayout() {
         const storedData = await loadLocalStorageData(parsedDataKey);
 
         if (!_isNil(storedData) && !_isEmpty(storedData)) {
-            router.push("/CustomerListRoute");
+            router.replace("/CustomerListRoute");
         }
-
-        setIsReady(true);
     };
 
     return (
@@ -111,7 +113,6 @@ export default function RootLayout() {
             <RootSiblingParent>
                 <SafeAreaProvider>
                     <Stack>
-                        {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
                         <Stack.Screen
                             name="index"
                             options={{
@@ -124,6 +125,16 @@ export default function RootLayout() {
                         />
                         <Stack.Screen
                             name="CustomerListRoute"
+                            options={{
+                                headerShown: true,
+                                header: () => (
+                                    <ScreenHeader headerName="Balance Connect" />
+                                ),
+                                statusBarStyle: "dark",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="UserManualRoute"
                             options={{
                                 headerShown: true,
                                 header: () => (

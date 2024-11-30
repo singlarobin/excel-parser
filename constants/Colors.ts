@@ -25,5 +25,7 @@ export const Colors = {
     },
     neutral: {
         blue: "#2022ff",
+        white: "#fff",
+        black: "#000000",
     },
 };
