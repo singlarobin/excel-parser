@@ -67,8 +67,12 @@ export const getDataToScheduleReminder = (obj: Record<string, any>) => {
     const reminderDate = new Date(dueDate);
 
     const currentDate = new Date();
-    const currentHour = currentDate.getHours();
-    const currentMinute = currentDate.getMinutes();
+    const currentHour =
+        reminderDate.getDate() === currentDate.getDate() &&
+        currentDate.getHours() >= 18
+            ? currentDate.getHours() + 1
+            : 11;
+    const currentMinute = 5; //currentDate.getMinutes();
 
     const hourToSet =
         Math.floor(Math.random() * (18 - currentHour + 1)) + currentHour;
