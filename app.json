@@ -1,7 +1,7 @@
 {
     "expo": {
         "name": "Balance Connect",
-        "slug": "Balance Connect",
+        "slug": "BalanceConnect",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
