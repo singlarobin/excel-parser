@@ -7,6 +7,8 @@ import {
     findNodeHandle,
     UIManager,
 } from "react-native";
+import { Dimensions } from "react-native";
+
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 import { styles } from "./Dropdown.styled";
@@ -19,6 +21,7 @@ type DropdownProps = {
     selectedItem?: Record<string, any> | string;
     modalStyle?: Record<string, any>;
     onChange: (value: any) => void;
+    measureLayout?: boolean;
 };
 
 export const Dropdown = ({
@@ -27,6 +30,7 @@ export const Dropdown = ({
     modalStyle = {},
     onChange,
     multiple = false,
+    measureLayout = false,
 }: DropdownProps) => {
     const [open, setOpen] = useState(false);
     const [parentLayout, setParentLayout] = useState({
@@ -38,10 +42,13 @@ export const Dropdown = ({
 
     const boxRef = useRef<View>(null);
 
+    const { height } = Dimensions.get("window");
+
     useEffect(() => {
         // Call measure after a timeout to ensure layout is complete
+
         setTimeout(handleMeasure, 100);
-    }, []);
+    }, [measureLayout]);
 
     const handleMeasure = () => {
         if (!_isNil(boxRef?.current)) {
@@ -66,6 +73,16 @@ export const Dropdown = ({
         typeof selectedItem === "string"
             ? selectedItem
             : selectedItem?.label ?? "Select";
+
+    const getListLayoutStyle = () => {
+        if (height / 2 > parentLayout.y) {
+            return { top: parentLayout.y + parentLayout.height + 4 };
+        }
+
+        return {
+            bottom: height - parentLayout.y + 8,
+        };
+    };
 
     return (
         <View ref={boxRef} collapsable={false} style={[styles.container]}>
@@ -97,12 +114,7 @@ export const Dropdown = ({
                 >
                     <FlatList
                         data={list}
-                        style={[
-                            styles.modalContent,
-                            {
-                                top: parentLayout.y + parentLayout.height + 4, // Align with parent's bottom
-                            },
-                        ]}
+                        style={[styles.modalContent, getListLayoutStyle()]}
                         keyExtractor={(item, index) => index.toString()}
                         ListEmptyComponent={
                             <View style={[styles.emptyListContainer]}>

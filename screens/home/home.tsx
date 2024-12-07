@@ -34,7 +34,6 @@ import { useRootNavigationState, useRouter } from "expo-router";
 
 export const HomeScreen = () => {
     const router = useRouter();
-    const state = useRootNavigationState();
 
     const [fileName, setFileName] = useState<string>();
     const [selectedSheet, setSelectedSheet] = useState<string>();
@@ -57,19 +56,10 @@ export const HomeScreen = () => {
     >([]);
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isScrolling, setIsScrolling] = useState(false);
 
     useEffect(() => {
         setDefautlFieldList();
-
-        // console.log("===>", state.routes);
-
-        // if (
-        //     !_isNil(state.routes) &&
-        //     !_isEmpty(state.routes) &&
-        //     state.routes.length <= 1
-        // ) {
-        //     void fetchData();
-        // }
     }, []);
 
     const setDefautlFieldList = () => {
@@ -81,15 +71,6 @@ export const HomeScreen = () => {
         );
         setFieldList(currFieldList);
     };
-
-    // const fetchData = async () => {
-    //     const storedData = await loadLocalStorageData(parsedDataKey);
-
-    //     if (!_isNil(storedData) && !_isEmpty(storedData)) {
-    //         console.log("===> push");
-    //         router.push("/CustomerListRoute");
-    //     }
-    // };
 
     const selectFile = async (): Promise<string | null> => {
         try {
@@ -308,12 +289,26 @@ export const HomeScreen = () => {
 
                 saveLocalStorageData(data ?? [], parsedDataKey);
                 router.push("/CustomerListRoute");
+            } else {
+                Toast.show("Please select file and sheet to proceed", {
+                    duration: Toast.durations.SHORT,
+                });
             }
         } catch (error) {
             if (error instanceof Error) {
                 Toast.show(`Import Error => ${error.message}`);
             }
         }
+    };
+
+    const handleScrollStart = () => {
+        console.log("Scrolling started");
+        setIsScrolling(true);
+    };
+
+    const handleScrollEnd = () => {
+        console.log("Scrolling ended");
+        setIsScrolling(false);
     };
 
     return (
@@ -371,6 +366,8 @@ export const HomeScreen = () => {
                         style={[styles.listContainer]}
                         data={fieldList}
                         keyExtractor={(item) => item.value}
+                        onScrollBeginDrag={handleScrollStart} // Detect when scrolling starts
+                        onScrollEndDrag={handleScrollEnd} // Detect when scrolling ends
                         renderItem={({ item, index }) => (
                             <TouchableOpacity
                                 style={styles.listItem}
@@ -392,20 +389,42 @@ export const HomeScreen = () => {
 
                                         setFieldList(updatedFiedList);
                                     }}
+                                    measureLayout={isScrolling}
                                 />
                             </TouchableOpacity>
                         )}
                     />
                 </View>
             )}
-            <View style={[{ width: "100%", alignItems: "center" }]}>
-                <View style={[{ width: "25%" }]}>
-                    <Button
+            <View
+                style={[
+                    {
+                        width: "100%",
+                        alignItems: "center",
+                        backgroundColor: Colors.neutral.blue,
+                    },
+                ]}
+            >
+                <TouchableOpacity
+                    activeOpacity={1}
+                    style={[{ width: "25%", paddingVertical: 12 }]}
+                    onPress={handleImport}
+                >
+                    <Text
+                        style={{
+                            color: Colors.neutral.white,
+                            fontSize: 16,
+                            fontWeight: "500",
+                        }}
+                    >
+                        IMPORT
+                    </Text>
+                    {/* <Button
                         title="Import"
                         color={Colors.neutral.blue}
-                        onPress={handleImport}
-                    />
-                </View>
+                        
+                    /> */}
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );

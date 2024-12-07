@@ -4,13 +4,13 @@ export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingTop: 8,
         justifyContent: "flex-start",
         alignItems: "flex-start",
     },
     stepContainer: {
         flexDirection: "row",
+        paddingHorizontal: 16,
         width: "100%",
         gap: 12,
         justifyContent: "space-between",
@@ -33,18 +33,20 @@ export const styles = StyleSheet.create({
     },
     loader: {
         width: "100%",
-        height: "78.5%",
+        flex: 1,
     },
     columnMapContainer: {
-        height: "70%",
+        flex: 1,
         width: "100%",
         alignItems: "flex-start",
         marginBottom: 8,
+        paddingHorizontal: 16,
     },
     listContainer: {
         paddingTop: 12,
         paddingLeft: 28,
         width: "100%",
+        overflow: "hidden",
     },
     listItem: {
         flexDirection: "row",
