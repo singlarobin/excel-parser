@@ -105,13 +105,23 @@ export const getDataToScheduleReminder = (obj: Record<string, any>) => {
 
 type BackAcionArgs = {
     router: Router;
+    handleScreenBack?: () => void;
 };
 
-export const screenBackAction = ({ router }: BackAcionArgs) => {
+export const screenBackAction = ({
+    router,
+    handleScreenBack,
+}: BackAcionArgs) => {
+    if (typeof handleScreenBack === "function") {
+        handleScreenBack();
+        return true;
+    }
+
     if (router.canGoBack()) {
         router.back();
         return true;
     }
+
     // Exit app only if there are no more screens to go back to
     return false;
 };

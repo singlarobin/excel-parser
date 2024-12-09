@@ -15,7 +15,7 @@ import _isEmpty from "lodash/isEmpty";
 import debounce from "lodash/debounce";
 
 import { styles } from "./CustomerData.styled";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "./component/card/card";
 import {
     loadLocalStorageData,
@@ -28,6 +28,7 @@ import { parsedDataKey } from "./constant";
 import { Filter } from "./component/Filter/Filter";
 import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
 import { Colors } from "@/constants/Colors";
+import { useFocusEffect } from "expo-router";
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -49,9 +50,11 @@ export const CustomerListScreen = () => {
     const [selectedDate, setSelectedDate] = useState("");
     const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [])
+    );
 
     // useEffect(() => {
     //     setFilteredData(fileData);

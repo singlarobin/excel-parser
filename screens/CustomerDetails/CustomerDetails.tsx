@@ -8,7 +8,7 @@ import {
     View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
@@ -16,6 +16,7 @@ import _isEmpty from "lodash/isEmpty";
 import {
     formatIsoDate,
     loadLocalStorageData,
+    saveLocalStorageData,
     screenBackAction,
 } from "@/utils/helperFunction";
 import { Colors } from "@/constants/Colors";
@@ -24,6 +25,7 @@ import { parsedDataKey } from "../CustomerData/constant";
 import { styles } from "./CustomerDetails.styled";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-root-toast";
+import { DetailUpdate } from "../CustomerData/component/DetailUpdate/DetailUpdate";
 
 export const CustomerDetails = () => {
     const { id } = useLocalSearchParams();
@@ -32,20 +34,30 @@ export const CustomerDetails = () => {
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    const [isDetailUpdate, setIsDetailUpdate] = useState(false);
+
+    const handleScreenBack = () => {
+        if (isDetailUpdate) {
+            setIsDetailUpdate(false);
+        } else if (router.canGoBack()) {
+            router.back();
+        }
+    };
+
     useEffect(() => {
         fetchData();
+    }, []);
 
+    useEffect(() => {
         const backHandler = BackHandler.addEventListener(
             "hardwareBackPress",
-            () => screenBackAction({ router })
+            () => screenBackAction({ router, handleScreenBack })
         );
 
         return () => {
             backHandler.remove();
         };
-    }, []);
-
-    useEffect(() => {});
+    }, [isDetailUpdate]);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -81,7 +93,32 @@ export const CustomerDetails = () => {
         }
     };
 
+    const updateData = (obj: Record<string, any>) => {
+        const updatedFileData = fileData
+            .map((data) => {
+                if (data.id === obj.id) {
+                    return obj;
+                }
+
+                return data;
+            })
+            .sort((a, b) => {
+                const dateA = new Date(a["dueDate"]);
+                const dateB = new Date(b["dueDate"]);
+
+                return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
+            });
+
+        setFileData(updatedFileData);
+        saveLocalStorageData(updatedFileData ?? [], parsedDataKey);
+        setIsDetailUpdate(false);
+    };
+
     const data = fileData.find((obj) => obj.id == id);
+
+    if (isDetailUpdate && !_isNil(data)) {
+        return <DetailUpdate data={data} updateData={updateData} />;
+    }
 
     return (
         <View style={styles.container}>
@@ -100,7 +137,7 @@ export const CustomerDetails = () => {
                 <View>
                     <View style={styles.iconContainer}>
                         <TouchableOpacity
-                        // onPress={() => setCustomerDetailIndex(index)}
+                            onPress={() => setIsDetailUpdate(true)}
                         >
                             <Ionicons
                                 name="create-outline"
