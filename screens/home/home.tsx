@@ -261,6 +261,14 @@ export const HomeScreen = () => {
                             ...obj,
                             id: generateRandomId(),
                         };
+                    } else {
+                        obj = {
+                            ...obj,
+                            id:
+                                typeof obj.id === "string"
+                                    ? obj.id.trim()
+                                    : obj.id,
+                        };
                     }
 
                     // If stored Data has Due Date updated then retain that date
@@ -302,12 +310,10 @@ export const HomeScreen = () => {
     };
 
     const handleScrollStart = () => {
-        console.log("Scrolling started");
         setIsScrolling(true);
     };
 
     const handleScrollEnd = () => {
-        console.log("Scrolling ended");
         setIsScrolling(false);
     };
 

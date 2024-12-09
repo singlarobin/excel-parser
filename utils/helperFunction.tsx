@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
+import { Router } from "expo-router";
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -93,11 +94,24 @@ export const getDataToScheduleReminder = (obj: Record<string, any>) => {
 
     return {
         content: {
-            title: "Balance Connect",
+            title: "Remind Credits",
             body,
             data: obj,
             priority: "high", // Set priority for visibility
         },
         trigger: reminderDate,
     };
+};
+
+type BackAcionArgs = {
+    router: Router;
+};
+
+export const screenBackAction = ({ router }: BackAcionArgs) => {
+    if (router.canGoBack()) {
+        router.back();
+        return true;
+    }
+    // Exit app only if there are no more screens to go back to
+    return false;
 };

@@ -4,18 +4,13 @@ export const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 4,
         paddingVertical: 8,
-        flexDirection: "row",
-        justifyContent: "space-between",
         borderWidth: 1,
         borderColor: "gray",
         borderRadius: 8,
     },
-    leftContainer: {
-        flex: 0.6,
-    },
-    rightContainer: {
-        flex: 0.4,
-        alignItems: "flex-end",
+    firstRow: {
+        flexDirection: "row",
+        gap: 8,
     },
     inlineStyle: {
         flexDirection: "row",
@@ -29,7 +24,7 @@ export const styles = StyleSheet.create({
     },
     iconsContainer: {
         flexDirection: "row",
-        gap: 8,
+        gap: 4,
         justifyContent: "flex-end",
     },
 });

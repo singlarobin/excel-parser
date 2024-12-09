@@ -1,11 +1,4 @@
-import {
-    Text,
-    View,
-    Linking,
-    Alert,
-    TouchableOpacity,
-    Modal,
-} from "react-native";
+import { Text, View, Linking, Alert, TouchableOpacity } from "react-native";
 import Toast from "react-native-root-toast";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -14,7 +7,7 @@ import _isEmpty from "lodash/isEmpty";
 
 import { styles } from "./card.styled";
 import { formatIsoDate } from "@/utils/helperFunction";
-import { useState } from "react";
+import { useRouter } from "expo-router";
 
 type CardProps = {
     data: Record<string, any>;
@@ -23,6 +16,7 @@ type CardProps = {
 };
 
 export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
+    const router = useRouter();
     const { phone } = data;
 
     const dialPhoneNumber = (phoneNumber: string) => {
@@ -51,29 +45,18 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.leftContainer}>
-                <View style={styles.inlineStyle}>
-                    <Text style={styles.headerText}>Name:</Text>
-                    <Text> {`${data["name"] ?? "-"}`}</Text>
-                </View>
-
-                <View style={styles.inlineStyle}>
-                    <Text style={styles.headerText}>Phone:</Text>
-                    <Text> {`${data["phone"] ?? "-"}`}</Text>
-                </View>
-
-                <View style={styles.inlineStyle}>
-                    <Text style={styles.headerText}>City Name:</Text>
-                    <Text> {`${data["city"] ?? "-"}`}</Text>
-                </View>
-
-                <View style={styles.inlineStyle}>
-                    <Text style={styles.headerText}>Plumber:</Text>
-                    <Text> {`${data["plumber"] ?? "-"}`}</Text>
-                </View>
-            </View>
-            <View style={styles.rightContainer}>
+        <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.container}
+            onPress={() =>
+                router.push(`/CustomerDetailsRoute?id=${data["id"]}`)
+            }
+        >
+            <View style={styles.firstRow}>
+                <Text style={styles.headerText}>Name:</Text>
+                <Text numberOfLines={2} style={{ flex: 1 }}>
+                    {`${data["name"] ?? "-"}`}
+                </Text>
                 <View style={[styles.iconsContainer]}>
                     <TouchableOpacity
                         onPress={() => setCustomerDetailIndex(index)}
@@ -89,32 +72,41 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
                         <Ionicons name="call-sharp" size={20} color={"blue"} />
                     </TouchableOpacity>
                 </View>
-
-                <View style={styles.inlineStyle}>
-                    <Text style={[styles.headerText]}>Balance:</Text>
-                    <Text>{`${data["balance"] ?? "-"}`}</Text>
-                </View>
-
-                {/* <View style={styles.inlineStyle}>
-                    <Text style={[styles.headerText, styles.redText]}>
-                        Date:
-                    </Text>
-                    <Text style={[styles.redText]}>{`${
-                        data["Date"] ?? "N/A"
-                    }`}</Text>
-                </View> */}
-
-                <View style={styles.inlineStyle}>
-                    <Text style={[styles.headerText, styles.redText]}>
-                        Due Date:
-                    </Text>
-                    <Text style={[styles.redText]}>{`${
-                        !_isNil(data["dueDate"]) && !_isEmpty(data["dueDate"])
-                            ? formatIsoDate(data["dueDate"])
-                            : "-"
-                    }`}</Text>
-                </View>
             </View>
-        </View>
+
+            <View style={styles.inlineStyle}>
+                <Text style={styles.headerText}>Phone:</Text>
+                <Text> {`${data["phone"] ?? "-"}`}</Text>
+                {!_isNil(data["phone2"] && !_isEmpty(data["phone2"])) && (
+                    <Text>{`, ${data["phone2"]}`}</Text>
+                )}
+            </View>
+
+            <View style={styles.inlineStyle}>
+                <Text style={styles.headerText}>City Name:</Text>
+                <Text> {`${data["city"] ?? "-"}`}</Text>
+            </View>
+            {/* 
+            <View style={styles.inlineStyle}>
+                <Text style={styles.headerText}>Guarantor:</Text>
+                <Text> {`${data["plumber"] ?? "-"}`}</Text>
+            </View> */}
+
+            <View style={styles.inlineStyle}>
+                <Text style={[styles.headerText]}>Balance:</Text>
+                <Text>{`${data["balance"] ?? "-"}`}</Text>
+            </View>
+
+            <View style={styles.inlineStyle}>
+                <Text style={[styles.headerText, styles.redText]}>
+                    Due Date:
+                </Text>
+                <Text style={[styles.redText]}>{`${
+                    !_isNil(data["dueDate"]) && !_isEmpty(data["dueDate"])
+                        ? formatIsoDate(data["dueDate"])
+                        : "-"
+                }`}</Text>
+            </View>
+        </TouchableOpacity>
     );
 };

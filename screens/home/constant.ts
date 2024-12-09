@@ -6,7 +6,7 @@ export const mapToFieldObj = {
     city: "City",
     category: "Category",
     tour: "Tour",
-    plumber: "Plumber",
+    plumber: "Guarantor",
     balance: "Balance",
     dueDate: "Due Date",
 };

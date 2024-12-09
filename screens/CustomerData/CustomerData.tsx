@@ -192,6 +192,20 @@ export const CustomerListScreen = () => {
             return obj;
         });
 
+        (updatedFilterData ?? []).sort((a, b) => {
+            const dateA = new Date(a["dueDate"]);
+            const dateB = new Date(b["dueDate"]);
+
+            return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
+        });
+
+        (updatedFileData ?? []).sort((a, b) => {
+            const dateA = new Date(a["dueDate"]);
+            const dateB = new Date(b["dueDate"]);
+
+            return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
+        });
+
         setFileData(updatedFileData);
         setFilteredData(updatedFilterData);
 

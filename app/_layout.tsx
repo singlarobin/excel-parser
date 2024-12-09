@@ -100,7 +100,7 @@ export default function RootLayout() {
         const storedData = await loadLocalStorageData(parsedDataKey);
 
         if (!_isNil(storedData) && !_isEmpty(storedData)) {
-            router.replace("/CustomerListRoute");
+            router.replace(`/CustomerDetailsRoute?id=${storedData.id}`);
         }
     };
 
@@ -116,7 +116,7 @@ export default function RootLayout() {
                             options={{
                                 headerShown: true,
                                 header: () => (
-                                    <ScreenHeader headerName="Balance Connect" />
+                                    <ScreenHeader headerName="Remind Credits" />
                                 ),
                                 statusBarStyle: "dark",
                             }}
@@ -126,7 +126,17 @@ export default function RootLayout() {
                             options={{
                                 headerShown: true,
                                 header: () => (
-                                    <ScreenHeader headerName="Balance Connect" />
+                                    <ScreenHeader headerName="Remind Credits" />
+                                ),
+                                statusBarStyle: "dark",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="CustomerDetailsRoute"
+                            options={{
+                                headerShown: true,
+                                header: () => (
+                                    <ScreenHeader headerName="Remind Credits" />
                                 ),
                                 statusBarStyle: "dark",
                             }}
@@ -136,7 +146,7 @@ export default function RootLayout() {
                             options={{
                                 headerShown: true,
                                 header: () => (
-                                    <ScreenHeader headerName="Balance Connect" />
+                                    <ScreenHeader headerName="Remind Credits" />
                                 ),
                                 statusBarStyle: "dark",
                             }}
