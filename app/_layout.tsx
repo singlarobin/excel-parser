@@ -53,7 +53,7 @@ export default function RootLayout() {
         const subscription =
             Notifications.addNotificationResponseReceivedListener(
                 async (response) => {
-                    await fetchData();
+                    await fetchData(response.notification.request.content.data);
 
                     const phoneNumber =
                         response.notification.request.content.data.phone;
@@ -96,11 +96,13 @@ export default function RootLayout() {
             .catch((error) => console.error("Error opening dialer:", error));
     };
 
-    const fetchData = async () => {
+    const fetchData = async (data?: Record<string, any>) => {
         const storedData = await loadLocalStorageData(parsedDataKey);
 
-        if (!_isNil(storedData) && !_isEmpty(storedData)) {
-            router.replace(`/CustomerDetailsRoute?id=${storedData.id}`);
+        if (!_isNil(data) && !_isEmpty(data)) {
+            router.replace(`/CustomerDetailsRoute?id=${data.id}`);
+        } else if (!_isNil(storedData) && !_isEmpty(storedData)) {
+            router.replace(`/CustomerListRoute`);
         }
     };
 

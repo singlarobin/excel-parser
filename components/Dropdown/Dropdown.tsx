@@ -22,6 +22,7 @@ type DropdownProps = {
     modalStyle?: Record<string, any>;
     onChange: (value: any) => void;
     measureLayout?: boolean;
+    dropdownStyles?: Record<string, any>;
 };
 
 export const Dropdown = ({
@@ -31,6 +32,7 @@ export const Dropdown = ({
     onChange,
     multiple = false,
     measureLayout = false,
+    dropdownStyles = {},
 }: DropdownProps) => {
     const [open, setOpen] = useState(false);
     const [parentLayout, setParentLayout] = useState({
@@ -87,7 +89,7 @@ export const Dropdown = ({
     return (
         <View ref={boxRef} collapsable={false} style={[styles.container]}>
             <TouchableOpacity
-                style={styles.dropdown}
+                style={[styles.dropdown, dropdownStyles]}
                 activeOpacity={1}
                 onPress={() => {
                     setOpen(true);
@@ -127,7 +129,11 @@ export const Dropdown = ({
                                 onPress={() => handleSelect(item)}
                                 activeOpacity={1}
                             >
-                                <Text>{item}</Text>
+                                <Text>
+                                    {typeof item === "object"
+                                        ? item.label
+                                        : item}
+                                </Text>
                             </TouchableOpacity>
                         )}
                     />

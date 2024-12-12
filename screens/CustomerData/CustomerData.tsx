@@ -47,18 +47,31 @@ export const CustomerListScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [searchValue, setSearchValue] = useState("");
+    const [searchKey, setSearchKey] = useState("name");
     const [selectedDate, setSelectedDate] = useState("");
     const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
 
     useFocusEffect(
         useCallback(() => {
             fetchData();
+
+            setSearchValue("");
+            setSearchKey("name");
+            setSelectedDate("");
         }, [])
     );
 
     // useEffect(() => {
     //     setFilteredData(fileData);
     // }, [JSON.stringify(fileData)]);
+
+    useEffect(() => {
+        return () => {
+            setSearchValue("");
+            setSearchKey("name");
+            setSelectedDate("");
+        };
+    }, []);
 
     useEffect(() => {
         const backAction = () => {
@@ -85,6 +98,34 @@ export const CustomerListScreen = () => {
         setIsLoading(false);
         if (storedData) {
             setFileData(storedData);
+
+            // let updatedStoredData = [...storedData];
+
+            // if (!_isNil(searchValue) && !_isEmpty(searchValue)) {
+            //     updatedStoredData = updatedStoredData.filter((data) =>
+            //         (data[searchKey] ?? "")
+            //             .toLowerCase()
+            //             .includes(searchValue.toLowerCase())
+            //     );
+            //     console.log("====> search", searchValue, updatedStoredData);
+            // }
+
+            // if (!_isNil(selectedDate) && !_isEmpty(selectedDate)) {
+            //     updatedStoredData = updatedStoredData.filter((data) => {
+            //         const currentDueDate =
+            //             !_isNil(data["dueDate"]) && !_isEmpty(data["dueDate"])
+            //                 ? formatIsoDate(data["dueDate"])
+            //                 : "";
+
+            //         return currentDueDate === formatDate(selectedDate);
+            //     });
+            //     console.log(
+            //         "====> selectedDate",
+            //         selectedDate,
+            //         updatedStoredData
+            //     );
+            // }
+
             setFilteredData(storedData);
         }
     };
@@ -94,8 +135,13 @@ export const CustomerListScreen = () => {
         const dueDate = type === "dueDate" ? value : selectedDate;
 
         const filteredData = fileData?.filter((obj) => {
+            const objSearchValue =
+                typeof obj[searchKey] === "string"
+                    ? obj[searchKey]
+                    : `${obj[searchKey]}`;
+
             const matchesSearch = searchTerm
-                ? (obj["name"] ?? "")
+                ? objSearchValue
                       .toLowerCase()
                       .includes(searchTerm.toLowerCase())
                 : true;
@@ -122,6 +168,8 @@ export const CustomerListScreen = () => {
 
     const handleSearch = (text: string) => {
         setSearchValue(text);
+
+        debounceListFiltering.cancel();
 
         debounceListFiltering("search", text);
     };
@@ -226,8 +274,13 @@ export const CustomerListScreen = () => {
         );
     }
 
-    const hasNameMapped = "name" in (fileData?.[0] ?? {});
-    const hasDateMapped = "dueDate" in (fileData?.[0] ?? {});
+    const mappedData = {
+        hasNameMapped: "name" in (fileData?.[0] ?? {}),
+        hasCategoryMapped: "category" in (fileData?.[0] ?? {}),
+        hasTourMapped: "tour" in (fileData?.[0] ?? {}),
+        hasGurrantorMapped: "plumber" in (fileData?.[0] ?? {}),
+        hasDateMapped: "dueDate" in (fileData?.[0] ?? {}),
+    };
 
     return (
         <SafeAreaView style={[styles.container]}>
@@ -249,11 +302,12 @@ export const CustomerListScreen = () => {
                     <View>
                         <Filter
                             searchValue={searchValue}
+                            searchKey={searchKey}
                             handleSearch={handleSearch}
                             selectedDate={selectedDate}
                             onDayPress={onDayPress}
-                            hasNameMapped={hasNameMapped}
-                            hasDateMapped={hasDateMapped}
+                            mappedData={mappedData}
+                            setSearchKey={setSearchKey}
                         />
                     </View>
 
@@ -265,6 +319,11 @@ export const CustomerListScreen = () => {
                         )}
                         keyExtractor={(item, index) =>
                             item?.id ?? String(index)
+                        }
+                        ListEmptyComponent={
+                            <View style={[styles.emptyDataContainer]}>
+                                <Text>No Data</Text>
+                            </View>
                         }
                         renderItem={({ item, index }) => {
                             return (

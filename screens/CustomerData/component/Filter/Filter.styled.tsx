@@ -1,6 +1,11 @@
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
+    filterContainer: {
+        marginTop: 4,
+        marginBottom: 20,
+        gap: 12,
+    },
     container: {
         flexDirection: "row",
         alignItems: "center",
@@ -10,19 +15,28 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "gray",
         borderRadius: 4,
-        paddingHorizontal: 8,
+        paddingHorizontal: 4,
         paddingVertical: 4,
-        marginVertical: 12,
-        width: "48%",
+
+        flex: 1,
+        flexDirection: "row",
+        gap: 12,
+    },
+    searchText: {
+        flex: 1,
+    },
+    dropdown: {
+        borderWidth: 0,
+        borderRadius: 0,
+        borderColor: "gray",
+        borderLeftWidth: 1,
+        width: 108,
+        paddingVertical: 4,
+        paddingHorizontal: 4,
+        gap: 4,
     },
     dateContainer: {
-        borderWidth: 1,
-        borderColor: "gray",
-        borderRadius: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 8,
-        marginVertical: 12,
-        width: "48%",
+        marginRight: 8,
     },
     modalBackground: {
         flex: 1,
@@ -58,5 +72,18 @@ export const styles = StyleSheet.create({
     },
     buttonText: {
         color: "white",
+    },
+    chip: {
+        flexDirection: "row",
+        width: "62%",
+        // width: "min-content",
+        borderWidth: 1,
+        borderRadius: 4,
+        borderColor: "grey",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+    chipBoldText: {
+        fontWeight: "600",
     },
 });
