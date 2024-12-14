@@ -1,4 +1,4 @@
-export const mapToFieldObj = {
+export const mapToFieldObj: Record<string, string> = {
     id: "ID",
     name: "Name",
     phone: "Phone",

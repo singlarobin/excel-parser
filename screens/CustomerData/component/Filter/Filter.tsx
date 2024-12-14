@@ -4,9 +4,11 @@ import { Calendar, DateData } from "react-native-calendars";
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 import { styles } from "./Filter.styled";
-import { formatDate } from "@/utils/helperFunction";
+import { formatDate, loadLocalStorageData } from "@/utils/helperFunction";
 import { Dropdown } from "@/components/Dropdown/Dropdown";
 import { Ionicons } from "@expo/vector-icons";
+import { mappedColumnKeysList, searchAllowedKeys } from "../../constant";
+import { mapToFieldObj } from "@/screens/Home/constant";
 
 type FilterProps = {
     searchValue: string;
@@ -14,7 +16,6 @@ type FilterProps = {
     handleSearch: (text: string) => void;
     selectedDate: string;
     onDayPress: (day: DateData | string) => void;
-    mappedData: Record<string, boolean>;
     setSearchKey: (key: string) => void;
 };
 
@@ -24,56 +25,50 @@ export const Filter = ({
     handleSearch,
     selectedDate,
     onDayPress,
-    mappedData,
     setSearchKey,
 }: FilterProps) => {
     const [isCalendarVisible, setCalendarVisible] = useState(false);
-    const [selectedValue, setSelectedValue] = useState({
-        label: "Name",
-        value: "name",
+    const [selectedValue, setSelectedValue] = useState<Record<string, string>>({
+        label: mapToFieldObj[searchKey],
+        value: searchKey,
     });
     const [searchKeyList, setSearchKeyList] = useState<
         Array<Record<string, string>>
     >([]);
 
-    const {
-        hasDateMapped,
-        hasNameMapped,
-        hasCategoryMapped,
-        hasTourMapped,
-        hasGurrantorMapped,
-    } = mappedData;
+    const [mappedKeysList, setMappedKeysList] = useState<string[]>([]);
 
     useEffect(() => {
-        const list: Array<Record<string, string>> = [];
-        if (hasNameMapped) {
-            list.push({
-                label: "Name",
-                value: "name",
-            });
-        }
-        if (hasCategoryMapped) {
-            list.push({
-                label: "Category",
-                value: "category",
-            });
-        }
-        if (hasTourMapped) {
-            list.push({
-                label: "Tour",
-                value: "tour",
-            });
-        }
+        void generateSearchKeyList();
+    }, []);
 
-        if (hasGurrantorMapped) {
-            list.push({
-                label: "Gurrantor",
-                value: "plumber",
-            });
-        }
+    const generateSearchKeyList = async () => {
+        const keysList: string[] = await loadLocalStorageData(
+            mappedColumnKeysList
+        );
 
-        setSearchKeyList(list);
-    }, [JSON.stringify(mappedData)]);
+        setMappedKeysList(keysList);
+
+        if (!_isNil(keysList) && !_isEmpty(keysList)) {
+            const list: Array<Record<string, string>> = [];
+            searchAllowedKeys.forEach((key) => {
+                if (keysList.includes(key)) {
+                    list.push({
+                        label: mapToFieldObj[key],
+                        value: key,
+                    });
+
+                    // if (_isNil(selectedValue)) {
+                    //     setSelectedValue({
+                    //         label: mapToFieldObj[key],
+                    //         value: key,
+                    //     });
+                    // }
+                }
+            });
+            setSearchKeyList(list);
+        }
+    };
 
     const handleDayPress = (day: DateData) => {
         onDayPress(day);
@@ -85,13 +80,16 @@ export const Filter = ({
             ? formatDate(selectedDate)
             : "";
 
+    const showSearch = searchKeyList.some((obj) =>
+        searchAllowedKeys.includes(obj.value)
+    );
+
+    const showCalender = mappedKeysList.some((key) => key === "dueDate");
+
     return (
         <View style={[styles.filterContainer]}>
             <View style={[styles.container]}>
-                {(hasNameMapped ||
-                    hasCategoryMapped ||
-                    hasTourMapped ||
-                    hasGurrantorMapped) && (
+                {showSearch && (
                     <View style={[styles.searchBox]}>
                         <TextInput
                             placeholder={"Search By"}
@@ -112,13 +110,8 @@ export const Filter = ({
                         />
                     </View>
                 )}
-                {/* {(hasNameMapped ||
-                hasCategoryMapped ||
-                hasTourMapped ||
-                hasGurrantorMapped) && (
-               
-            )} */}
-                {hasDateMapped && (
+
+                {showCalender && (
                     <TouchableOpacity
                         style={[styles.dateContainer]}
                         activeOpacity={1}

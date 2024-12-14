@@ -25,7 +25,7 @@ import {
     loadLocalStorageData,
     saveLocalStorageData,
 } from "@/utils/helperFunction";
-import { parsedDataKey } from "../CustomerData/constant";
+import { mappedColumnKeysList, parsedDataKey } from "../CustomerData/constant";
 import { styles } from "./home.styled";
 import { Colors } from "@/constants/Colors";
 import { Dropdown } from "@/components/Dropdown/Dropdown";
@@ -51,7 +51,7 @@ export const HomeScreen = () => {
         Array<{
             label: string;
             value: string;
-            selecedColumn?: string;
+            selectedColumn?: string;
         }>
     >([]);
 
@@ -181,8 +181,8 @@ export const HomeScreen = () => {
 
         const mappedColumnData = fieldList.reduce(
             (acc: Record<string, string>, item) => {
-                if (item.selecedColumn) {
-                    acc[item.selecedColumn] = item.value;
+                if (item.selectedColumn) {
+                    acc[item.selectedColumn] = item.value;
                 }
                 return acc;
             },
@@ -190,6 +190,9 @@ export const HomeScreen = () => {
         );
 
         const mappedKeysList = Object.keys(mappedColumnData);
+        const mappedValueList = Object.values(mappedColumnData);
+
+        void saveLocalStorageData(mappedValueList ?? [], mappedColumnKeysList);
 
         return updatedData.map((obj) => {
             const otherData = mappedKeysList.reduce(
@@ -375,22 +378,19 @@ export const HomeScreen = () => {
                         onScrollBeginDrag={handleScrollStart} // Detect when scrolling starts
                         onScrollEndDrag={handleScrollEnd} // Detect when scrolling ends
                         renderItem={({ item, index }) => (
-                            <TouchableOpacity
-                                style={styles.listItem}
-                                // onPress={() => handleSelect(item)}
-                            >
+                            <TouchableOpacity style={styles.listItem}>
                                 <Text>{item.label}</Text>
                                 <Dropdown
                                     list={selectedSheetColumnList}
                                     selectedItem={
-                                        fieldList?.[index].selecedColumn
+                                        fieldList?.[index].selectedColumn
                                     }
                                     onChange={(value) => {
                                         const updatedFiedList =
                                             cloneDeep(fieldList);
                                         updatedFiedList[index] = {
                                             ...updatedFiedList[index],
-                                            selecedColumn: value,
+                                            selectedColumn: value,
                                         };
 
                                         setFieldList(updatedFiedList);
@@ -412,7 +412,7 @@ export const HomeScreen = () => {
                 ]}
             >
                 <TouchableOpacity
-                    activeOpacity={1}
+                    activeOpacity={0.5}
                     style={[{ width: "25%", paddingVertical: 12 }]}
                     onPress={handleImport}
                 >
@@ -425,11 +425,6 @@ export const HomeScreen = () => {
                     >
                         IMPORT
                     </Text>
-                    {/* <Button
-                        title="Import"
-                        color={Colors.neutral.blue}
-                        
-                    /> */}
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

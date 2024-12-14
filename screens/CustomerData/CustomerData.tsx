@@ -24,7 +24,11 @@ import {
     saveLocalStorageData,
     getDataToScheduleReminder,
 } from "@/utils/helperFunction";
-import { parsedDataKey } from "./constant";
+import {
+    mappedColumnKeysList,
+    parsedDataKey,
+    searchAllowedKeys,
+} from "./constant";
 import { Filter } from "./component/Filter/Filter";
 import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
 import { Colors } from "@/constants/Colors";
@@ -47,7 +51,7 @@ export const CustomerListScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [searchValue, setSearchValue] = useState("");
-    const [searchKey, setSearchKey] = useState("name");
+    const [searchKey, setSearchKey] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
 
@@ -95,6 +99,10 @@ export const CustomerListScreen = () => {
     const fetchData = async () => {
         setIsLoading(true);
         const storedData = await loadLocalStorageData(parsedDataKey);
+        const keysList: string[] = await loadLocalStorageData(
+            mappedColumnKeysList
+        );
+
         setIsLoading(false);
         if (storedData) {
             setFileData(storedData);
@@ -128,13 +136,22 @@ export const CustomerListScreen = () => {
 
             setFilteredData(storedData);
         }
+
+        if (!_isNil(keysList) && !_isEmpty(keysList)) {
+            for (let i = 0; i < searchAllowedKeys.length; i++) {
+                if (keysList.includes(searchAllowedKeys[i])) {
+                    setSearchKey(searchAllowedKeys[i]);
+                    break;
+                }
+            }
+        }
     };
 
     const handleListFiltering = (type: string, value: any) => {
         const searchTerm = type === "search" ? value : searchValue;
         const dueDate = type === "dueDate" ? value : selectedDate;
 
-        const filteredData = fileData?.filter((obj) => {
+        const filteredData = fileData?.filter((obj, index) => {
             const objSearchValue =
                 typeof obj[searchKey] === "string"
                     ? obj[searchKey]
@@ -161,15 +178,15 @@ export const CustomerListScreen = () => {
         setFilteredData(filteredData);
     };
 
-    const debounceListFiltering = debounce(
-        (type, value) => handleListFiltering(type, value),
-        500
+    const debounceListFiltering = useCallback(
+        debounce((type, value) => {
+            handleListFiltering(type, value);
+        }, 500),
+        [JSON.stringify(fileData)]
     );
 
     const handleSearch = (text: string) => {
         setSearchValue(text);
-
-        debounceListFiltering.cancel();
 
         debounceListFiltering("search", text);
     };
@@ -274,13 +291,13 @@ export const CustomerListScreen = () => {
         );
     }
 
-    const mappedData = {
-        hasNameMapped: "name" in (fileData?.[0] ?? {}),
-        hasCategoryMapped: "category" in (fileData?.[0] ?? {}),
-        hasTourMapped: "tour" in (fileData?.[0] ?? {}),
-        hasGurrantorMapped: "plumber" in (fileData?.[0] ?? {}),
-        hasDateMapped: "dueDate" in (fileData?.[0] ?? {}),
-    };
+    // const mappedData = {
+    //     hasNameMapped: "name" in (fileData?.[0] ?? {}),
+    //     hasCategoryMapped: "category" in (fileData?.[0] ?? {}),
+    //     hasTourMapped: "tour" in (fileData?.[0] ?? {}),
+    //     hasGurrantorMapped: "plumber" in (fileData?.[0] ?? {}),
+    //     hasDateMapped: "dueDate" in (fileData?.[0] ?? {}),
+    // };
 
     return (
         <SafeAreaView style={[styles.container]}>
@@ -306,7 +323,6 @@ export const CustomerListScreen = () => {
                             handleSearch={handleSearch}
                             selectedDate={selectedDate}
                             onDayPress={onDayPress}
-                            mappedData={mappedData}
                             setSearchKey={setSearchKey}
                         />
                     </View>

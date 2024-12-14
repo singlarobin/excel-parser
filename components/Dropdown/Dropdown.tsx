@@ -127,7 +127,7 @@ export const Dropdown = ({
                             <TouchableOpacity
                                 style={styles.item}
                                 onPress={() => handleSelect(item)}
-                                activeOpacity={1}
+                                activeOpacity={0.8}
                             >
                                 <Text>
                                     {typeof item === "object"
