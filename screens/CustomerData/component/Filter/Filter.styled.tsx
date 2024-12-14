@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
     filterContainer: {
         marginTop: 4,
         marginBottom: 20,
-        gap: 12,
+        gap: 20,
     },
     container: {
         flexDirection: "row",
@@ -75,15 +75,23 @@ export const styles = StyleSheet.create({
     },
     chip: {
         flexDirection: "row",
-        width: "62%",
-        // width: "min-content",
+        width: "65%",
         borderWidth: 1,
         borderRadius: 4,
         borderColor: "grey",
-        paddingHorizontal: 8,
+        paddingHorizontal: 12,
         paddingVertical: 4,
+        position: "relative",
     },
     chipBoldText: {
         fontWeight: "600",
+    },
+    closeIcon: {
+        position: "absolute",
+        top: -10,
+        right: -10,
+        backgroundColor: "white",
+        padding: 0,
+        margin: 0,
     },
 });

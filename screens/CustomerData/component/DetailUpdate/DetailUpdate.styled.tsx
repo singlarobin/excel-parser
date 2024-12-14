@@ -38,6 +38,7 @@ export const styles = StyleSheet.create({
     },
     btnContainer: {
         flexDirection: "row",
+        justifyContent: "center",
         gap: 8,
     },
     button: {
@@ -45,7 +46,7 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 8,
         paddingVertical: 4,
         backgroundColor: "#2196F3",
-        borderRadius: 4,
+        borderRadius: 2,
     },
     clearBtn: {
         backgroundColor: "#f54153",

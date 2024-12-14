@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { Calendar, DateData } from "react-native-calendars";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
 import { styles } from "./Filter.styled";
-import { formatDate, loadLocalStorageData } from "@/utils/helperFunction";
+import { formatIsoDate, loadLocalStorageData } from "@/utils/helperFunction";
 import { Dropdown } from "@/components/Dropdown/Dropdown";
 import { Ionicons } from "@expo/vector-icons";
 import { mappedColumnKeysList, searchAllowedKeys } from "../../constant";
@@ -15,7 +16,7 @@ type FilterProps = {
     searchKey: string;
     handleSearch: (text: string) => void;
     selectedDate: string;
-    onDayPress: (day: DateData | string) => void;
+    handleDateSelect: (date: string) => void;
     setSearchKey: (key: string) => void;
 };
 
@@ -24,7 +25,7 @@ export const Filter = ({
     searchKey,
     handleSearch,
     selectedDate,
-    onDayPress,
+    handleDateSelect,
     setSearchKey,
 }: FilterProps) => {
     const [isCalendarVisible, setCalendarVisible] = useState(false);
@@ -70,14 +71,14 @@ export const Filter = ({
         }
     };
 
-    const handleDayPress = (day: DateData) => {
-        onDayPress(day);
-        // setCalendarVisible(false); // Hide the calendar when a date is selected
+    const handleDayPress = (date: Date) => {
+        handleDateSelect(date.toISOString());
+        setCalendarVisible(false); // Hide the calendar when a date is selected
     };
 
     const dateToShow =
         !_isNil(selectedDate) && !_isEmpty(selectedDate)
-            ? formatDate(selectedDate)
+            ? formatIsoDate(selectedDate)
             : "";
 
     const showSearch = searchKeyList.some((obj) =>
@@ -114,7 +115,7 @@ export const Filter = ({
                 {showCalender && (
                     <TouchableOpacity
                         style={[styles.dateContainer]}
-                        activeOpacity={1}
+                        activeOpacity={0.5}
                         onPress={() => setCalendarVisible(true)}
                     >
                         <Ionicons
@@ -124,53 +125,31 @@ export const Filter = ({
                         />
                     </TouchableOpacity>
                 )}
-                <Modal
-                    visible={isCalendarVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setCalendarVisible(false)}
-                >
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        style={styles.modalBackground}
-                        onPress={() => setCalendarVisible(false)}
-                    >
-                        <View style={styles.calendarContainer}>
-                            <Calendar
-                                onDayPress={handleDayPress}
-                                markedDates={
-                                    selectedDate
-                                        ? {
-                                              [selectedDate]: {
-                                                  selected: true,
-                                                  selectedColor: "blue",
-                                              },
-                                          }
-                                        : {}
-                                }
-                            />
-                            <View style={[styles.btnContainer]}>
-                                <TouchableOpacity
-                                    style={[styles.button, styles.clearBtn]}
-                                    onPress={() => onDayPress("")}
-                                >
-                                    <Text style={styles.buttonText}>Clear</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.button}
-                                    onPress={() => setCalendarVisible(false)}
-                                >
-                                    <Text style={styles.buttonText}>Close</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
+
+                <DateTimePickerModal
+                    isVisible={isCalendarVisible}
+                    mode="date"
+                    date={selectedDate ? new Date(selectedDate) : new Date()}
+                    onConfirm={handleDayPress}
+                    onCancel={() => setCalendarVisible(false)}
+                />
             </View>
             {!_isEmpty(dateToShow) && (
                 <View style={[styles.chip]}>
                     <Text style={[styles.chipBoldText]}>Selected Date :</Text>
                     <Text> {dateToShow}</Text>
+
+                    <TouchableOpacity
+                        style={[styles.closeIcon]}
+                        activeOpacity={0.5}
+                        onPress={() => handleDateSelect("")}
+                    >
+                        <Ionicons
+                            name="close-circle-outline"
+                            size={24}
+                            color={"gray"}
+                        />
+                    </TouchableOpacity>
                 </View>
             )}
         </View>

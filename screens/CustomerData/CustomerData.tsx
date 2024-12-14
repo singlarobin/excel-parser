@@ -7,7 +7,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import type { DateData } from "react-native-calendars";
 import * as Notifications from "expo-notifications";
 
 import _isNil from "lodash/isNil";
@@ -19,7 +18,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Card } from "./component/card/card";
 import {
     loadLocalStorageData,
-    formatDate,
     formatIsoDate,
     saveLocalStorageData,
     getDataToScheduleReminder,
@@ -169,7 +167,7 @@ export const CustomerListScreen = () => {
                     : "";
 
             const matchesDueDate = dueDate
-                ? currentDueDate === formatDate(dueDate)
+                ? currentDueDate === formatIsoDate(dueDate)
                 : true;
 
             return matchesSearch && matchesDueDate;
@@ -191,15 +189,9 @@ export const CustomerListScreen = () => {
         debounceListFiltering("search", text);
     };
 
-    const onDayPress = (day: DateData | string) => {
-        let dateString = "";
-
-        if (typeof day === "object") {
-            dateString = day.dateString;
-        }
-
-        setSelectedDate(dateString);
-        debounceListFiltering("dueDate", dateString);
+    const handleDateSelect = (date: string) => {
+        setSelectedDate(date);
+        debounceListFiltering("dueDate", date);
     };
 
     const cancelNotification = async (notificationId: string) => {
@@ -291,14 +283,6 @@ export const CustomerListScreen = () => {
         );
     }
 
-    // const mappedData = {
-    //     hasNameMapped: "name" in (fileData?.[0] ?? {}),
-    //     hasCategoryMapped: "category" in (fileData?.[0] ?? {}),
-    //     hasTourMapped: "tour" in (fileData?.[0] ?? {}),
-    //     hasGurrantorMapped: "plumber" in (fileData?.[0] ?? {}),
-    //     hasDateMapped: "dueDate" in (fileData?.[0] ?? {}),
-    // };
-
     return (
         <SafeAreaView style={[styles.container]}>
             {(_isNil(fileData) || _isEmpty(fileData)) && (
@@ -322,7 +306,7 @@ export const CustomerListScreen = () => {
                             searchKey={searchKey}
                             handleSearch={handleSearch}
                             selectedDate={selectedDate}
-                            onDayPress={onDayPress}
+                            handleDateSelect={handleDateSelect}
                             setSearchKey={setSearchKey}
                         />
                     </View>

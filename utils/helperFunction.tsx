@@ -50,6 +50,10 @@ export const formatIsoDate = (
     isoString: string,
     is_DD_MM_YYYY_Format = true
 ) => {
+    if (_isNil(isoString) || _isEmpty(isoString)) {
+        return "";
+    }
+
     const date = new Date(isoString);
     const day = String(date.getDate()).padStart(2, "0"); // Ensures two digits for day
     const month = String(date.getMonth() + 1).padStart(2, "0"); // getMonth() is 0-indexed

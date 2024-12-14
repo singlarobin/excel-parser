@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Button, Modal, Text, TouchableOpacity, View } from "react-native";
-import { Calendar, DateData } from "react-native-calendars";
+import { Button, Text, TouchableOpacity, View } from "react-native";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 import _isNil from "lodash/isNil";
 import _isEmpty from "lodash/isEmpty";
-import { formatDate, formatIsoDate } from "@/utils/helperFunction";
+import { formatIsoDate } from "@/utils/helperFunction";
 import { styles } from "./DetailUpdate.styled";
 
 type DetailUpdateProps = {
@@ -14,10 +14,26 @@ type DetailUpdateProps = {
 
 export const DetailUpdate = ({ data, updateData }: DetailUpdateProps) => {
     const [isCalendarVisible, setCalendarVisible] = useState(false);
+    const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>();
+    const [time, setTime] = useState<
+        { hour: number; minute: number } | undefined
+    >({
+        hour: 0,
+        minute: 0,
+    });
 
-    const handleDayPress = (day: DateData) => {
-        setSelectedDate(day.dateString);
+    useEffect(() => {
+        const currentDate = new Date();
+        setTime({
+            hour: currentDate.getHours(),
+            minute: currentDate.getMinutes(),
+        });
+    }, []);
+
+    const handleDayPress = (date: Date) => {
+        setSelectedDate(date.toISOString());
+        setCalendarVisible(false);
     };
 
     useEffect(() => {
@@ -32,6 +48,22 @@ export const DetailUpdate = ({ data, updateData }: DetailUpdateProps) => {
                     ? new Date(selectedDate).toISOString()
                     : "",
         });
+    };
+
+    const handleTimeConfirm = (time: any) => {
+        const hour = time.getHours();
+        const minute = time.getMinutes();
+
+        setTime({
+            hour: hour,
+            minute: minute,
+        });
+        setIsTimePickerVisible(false);
+    };
+
+    const handleClear = () => {
+        setTime(undefined);
+        setSelectedDate(undefined);
     };
 
     return (
@@ -50,54 +82,57 @@ export const DetailUpdate = ({ data, updateData }: DetailUpdateProps) => {
                     >
                         <Text>
                             {!_isNil(selectedDate) && !_isEmpty(selectedDate)
-                                ? formatDate(selectedDate)
+                                ? formatIsoDate(selectedDate)
                                 : "Select Date"}
+                        </Text>
+                    </TouchableOpacity>
+                    <DateTimePickerModal
+                        isVisible={isCalendarVisible}
+                        mode="date"
+                        date={
+                            selectedDate ? new Date(selectedDate) : new Date()
+                        }
+                        onConfirm={handleDayPress}
+                        onCancel={() => setCalendarVisible(false)}
+                    />
+                </View>
+
+                <View
+                    style={[
+                        { flexDirection: "row", gap: 12, alignItems: "center" },
+                    ]}
+                >
+                    <Text>Select Time</Text>
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        style={[styles.dateContainer]}
+                        onPress={() => setIsTimePickerVisible(true)}
+                    >
+                        <Text>
+                            {`${
+                                !_isNil(time)
+                                    ? `${time.hour}:${time.minute}`
+                                    : "-"
+                            }`}
                         </Text>
                     </TouchableOpacity>
                 </View>
 
-                <Modal
-                    visible={isCalendarVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setCalendarVisible(false)}
-                >
+                <DateTimePickerModal
+                    isVisible={isTimePickerVisible}
+                    mode="time"
+                    onConfirm={handleTimeConfirm}
+                    onCancel={() => setIsTimePickerVisible(false)}
+                />
+
+                <View style={[styles.btnContainer]}>
                     <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={() => setCalendarVisible(false)}
-                        style={styles.modalBackground}
+                        style={[styles.button, styles.clearBtn]}
+                        onPress={handleClear}
                     >
-                        <View style={styles.calendarContainer}>
-                            <Calendar
-                                onDayPress={handleDayPress}
-                                markedDates={
-                                    selectedDate
-                                        ? {
-                                              [selectedDate]: {
-                                                  selected: true,
-                                                  selectedColor: "blue",
-                                              },
-                                          }
-                                        : {}
-                                }
-                            />
-                            <View style={[styles.btnContainer]}>
-                                <TouchableOpacity
-                                    style={[styles.button, styles.clearBtn]}
-                                    onPress={() => setSelectedDate(undefined)}
-                                >
-                                    <Text style={styles.buttonText}>Clear</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.button}
-                                    onPress={() => setCalendarVisible(false)}
-                                >
-                                    <Text style={styles.buttonText}>Close</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+                        <Text style={styles.buttonText}>Clear</Text>
                     </TouchableOpacity>
-                </Modal>
+                </View>
             </View>
             <View style={[{ alignItems: "center", marginBottom: 24 }]}>
                 <View style={[{ width: "30%" }]}>
