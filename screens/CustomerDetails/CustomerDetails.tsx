@@ -26,6 +26,7 @@ import { styles } from "./CustomerDetails.styled";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-root-toast";
 import { DetailUpdate } from "../CustomerData/component/DetailUpdate/DetailUpdate";
+import { useUpdateNotification } from "../CustomerData/hooks/useUpdateNotification";
 
 export const CustomerDetails = () => {
     const { id } = useLocalSearchParams();
@@ -35,6 +36,8 @@ export const CustomerDetails = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [isDetailUpdate, setIsDetailUpdate] = useState(false);
+
+    const { updateNotificationReminder } = useUpdateNotification();
 
     const handleScreenBack = () => {
         if (isDetailUpdate) {
@@ -93,11 +96,19 @@ export const CustomerDetails = () => {
         }
     };
 
-    const updateData = (obj: Record<string, any>) => {
+    const updateData = async (
+        obj: Record<string, any>,
+        time?: { hour: number; minute: number }
+    ) => {
+        const notificationId = await updateNotificationReminder(obj, time);
+
         const updatedFileData = fileData
             .map((data) => {
                 if (data.id === obj.id) {
-                    return obj;
+                    return {
+                        ...obj,
+                        notificationId,
+                    };
                 }
 
                 return data;

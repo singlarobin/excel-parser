@@ -66,25 +66,18 @@ export const formatIsoDate = (
     return `${year}-${month}-${day}`;
 };
 
-export const getDataToScheduleReminder = (obj: Record<string, any>) => {
+export const getDataToScheduleReminder = (
+    obj: Record<string, any>,
+    time?: { hour: number; minute: number }
+) => {
     const { name, balance, dueDate } = obj;
     // Combine date and time into a single Date object
     const reminderDate = new Date(dueDate);
 
-    const currentDate = new Date();
-    const currentHour =
-        reminderDate.getDate() === currentDate.getDate() &&
-        currentDate.getHours() >= 18
-            ? currentDate.getHours() + 1
-            : 11;
-    const currentMinute = 5; //currentDate.getMinutes();
+    const hourToSet = Math.floor(Math.random() * (18 - 11)) + 11;
+    const minuteToSet = Math.floor(Math.random() * (60 - 0 + 1)) + 0;
 
-    const hourToSet =
-        Math.floor(Math.random() * (18 - currentHour + 1)) + currentHour;
-    const minuteToSet =
-        Math.floor(Math.random() * (60 - currentMinute + 1)) + currentMinute;
-
-    reminderDate.setHours(hourToSet, minuteToSet);
+    reminderDate.setHours(time?.hour ?? hourToSet, time?.minute ?? minuteToSet);
 
     let body = "This is your scheduled reminder!";
 

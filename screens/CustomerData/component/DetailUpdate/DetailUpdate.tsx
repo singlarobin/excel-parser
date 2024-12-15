@@ -9,7 +9,10 @@ import { styles } from "./DetailUpdate.styled";
 
 type DetailUpdateProps = {
     data: Record<string, any>;
-    updateData: (data: Record<string, any>) => void;
+    updateData: (
+        data: Record<string, any>,
+        time?: { hour: number; minute: number }
+    ) => Promise<void>;
 };
 
 export const DetailUpdate = ({ data, updateData }: DetailUpdateProps) => {
@@ -41,13 +44,16 @@ export const DetailUpdate = ({ data, updateData }: DetailUpdateProps) => {
     }, [data["dueDate"]]);
 
     const handleClose = () => {
-        updateData({
-            ...data,
-            dueDate:
-                !_isNil(selectedDate) && !_isEmpty(selectedDate)
-                    ? new Date(selectedDate).toISOString()
-                    : "",
-        });
+        updateData(
+            {
+                ...data,
+                dueDate:
+                    !_isNil(selectedDate) && !_isEmpty(selectedDate)
+                        ? new Date(selectedDate).toISOString()
+                        : "",
+            },
+            time
+        );
     };
 
     const handleTimeConfirm = (time: any) => {

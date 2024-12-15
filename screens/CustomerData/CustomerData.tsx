@@ -31,6 +31,7 @@ import { Filter } from "./component/Filter/Filter";
 import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
 import { Colors } from "@/constants/Colors";
 import { useFocusEffect } from "expo-router";
+import { useUpdateNotification } from "./hooks/useUpdateNotification";
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -52,6 +53,8 @@ export const CustomerListScreen = () => {
     const [searchKey, setSearchKey] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
+
+    const { updateNotificationReminder } = useUpdateNotification();
 
     useFocusEffect(
         useCallback(() => {
@@ -194,39 +197,11 @@ export const CustomerListScreen = () => {
         debounceListFiltering("dueDate", date);
     };
 
-    const cancelNotification = async (notificationId: string) => {
-        if (!_isEmpty(notificationId)) {
-            await Notifications.cancelScheduledNotificationAsync(
-                notificationId
-            );
-            console.log("Notification Cancelled:", notificationId);
-        } else {
-            console.log("No notification to cancel.");
-        }
-    };
-
-    const updateNotificationReminder = async (data: Record<string, any>) => {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== "granted") {
-            alert("You need to enable permissions for notifications to work!");
-        } else {
-            const { notificationId } = data;
-
-            await cancelNotification(notificationId);
-
-            const notificationContent = getDataToScheduleReminder(data);
-            const id = await Notifications.scheduleNotificationAsync(
-                notificationContent
-            );
-
-            return id;
-        }
-
-        return "";
-    };
-
-    const updateFileData = async (data: Record<string, any>) => {
-        const notificationId = await updateNotificationReminder(data);
+    const updateFileData = async (
+        data: Record<string, any>,
+        time?: { hour: number; minute: number }
+    ) => {
+        const notificationId = await updateNotificationReminder(data, time);
 
         const updatedFileData = fileData.map((obj, index) => {
             if (customerDetailIndex === index) {
@@ -240,8 +215,8 @@ export const CustomerListScreen = () => {
             return obj;
         });
 
-        const updatedFilterData = filteredData.map((obj, index) => {
-            if (customerDetailIndex === index) {
+        const updatedFilterData = filteredData.map((obj) => {
+            if (obj.id === data.id) {
                 return {
                     ...data,
                     notificationId,
