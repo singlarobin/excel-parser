@@ -13,15 +13,10 @@ import { usePathname, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 
-import {
-    getDataToScheduleReminder,
-    loadLocalStorageData,
-    saveLocalStorageData,
-} from "@/utils/helperFunction";
-import { parsedDataKey } from "@/screens/CustomerData/constant";
-
 import { styles } from "./ScreenHeader.styled";
-import Toast from "react-native-root-toast";
+
+import { useUpdateNotification } from "@/screens/CustomerData/hooks/useUpdateNotification";
+import { ScheduleReminder } from "./components/ScheduleReminder/ScheduleReminder";
 
 type ScreenHeaderProps = {
     cartCount?: number;
@@ -42,81 +37,30 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
     const router = useRouter();
 
     const [modalVisible, setModalVisible] = useState(false);
-
-    const cancelNotification = async (notificationId: string) => {
-        if (!_isEmpty(notificationId)) {
-            await Notifications.cancelScheduledNotificationAsync(
-                notificationId
-            );
-            console.log("Notification Cancelled:", notificationId);
-        } else {
-            console.log("No notification to cancel.");
-        }
-    };
-
-    async function requestPermissions() {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== "granted") {
-            alert("You need to enable permissions for notifications to work!");
-        } else {
-            const storedData: any[] = await loadLocalStorageData(parsedDataKey);
-            if (!_isNil(storedData) && !_isEmpty(storedData)) {
-                const pArr = storedData.map((obj) => {
-                    return new Promise(async (resolve) => {
-                        if (
-                            !_isNil(obj.notififcationId) &&
-                            !_isEmpty(obj.notifcationId)
-                        ) {
-                            await cancelNotification(obj.notififcationId);
-                        }
-
-                        if (
-                            !_isNil(obj["dueDate"]) &&
-                            !_isEmpty(obj["dueDate"])
-                        ) {
-                            const notififcationId = await scheduleReminder(obj);
-                            resolve({
-                                ...obj,
-                                notififcationId,
-                            });
-                        }
-
-                        resolve(obj);
-                    });
-                });
-
-                Promise.all(pArr).then((values) => {
-                    saveLocalStorageData(values ?? [], parsedDataKey);
-
-                    Toast.show("Reminder scheduled for all users");
-                });
-            }
-        }
-    }
-
-    async function scheduleReminder(obj: Record<string, any>) {
-        const notificationContent = getDataToScheduleReminder(obj);
-        // Schedule notification
-        const id = await Notifications.scheduleNotificationAsync(
-            notificationContent
-        );
-
-        return id;
-    }
+    const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+    const [reminderType, setReminderType] = useState<string>();
 
     const handleModalItemClick = (type: string) => {
         setModalVisible(false);
         if (type === "uploadFile") {
-            // saveLocalStorageData([], parsedDataKey);
             router.push("/");
         } else if (type === "scheduleReminder") {
-            requestPermissions();
+            setScheduleModalVisible(true);
+            setReminderType("schedule");
+        } else if (type === "cancelReminder") {
+            setScheduleModalVisible(true);
+            setReminderType("cancel");
         } else if (type === "openUserManual") {
             router.push("/UserManualRoute");
         }
     };
 
     const isHomePath = pathName === "/";
+
+    const closeModal = () => {
+        setScheduleModalVisible(false);
+        setReminderType(undefined);
+    };
 
     return (
         <SafeAreaView>
@@ -161,17 +105,30 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
                                     </TouchableOpacity>
                                 )}
                                 {!isHomePath && (
-                                    <TouchableOpacity
-                                        onPress={() =>
-                                            handleModalItemClick(
-                                                "scheduleReminder"
-                                            )
-                                        }
-                                    >
-                                        <Text style={styles.menuItem}>
-                                            Schedule Reminder
-                                        </Text>
-                                    </TouchableOpacity>
+                                    <View>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                handleModalItemClick(
+                                                    "scheduleReminder"
+                                                )
+                                            }
+                                        >
+                                            <Text style={styles.menuItem}>
+                                                Schedule Reminder
+                                            </Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                handleModalItemClick(
+                                                    "cancelReminder"
+                                                )
+                                            }
+                                        >
+                                            <Text style={styles.menuItem}>
+                                                Cancel Reminder
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 )}
                                 <TouchableOpacity
                                     onPress={() =>
@@ -185,6 +142,12 @@ const ScreenHeader = ({ headerName, header }: ScreenHeaderProps) => {
                             </View>
                         </TouchableOpacity>
                     </Modal>
+
+                    <ScheduleReminder
+                        isVisible={scheduleModalVisible}
+                        closeModal={closeModal}
+                        reminderType={reminderType}
+                    />
                 </View>
             )}
         </SafeAreaView>

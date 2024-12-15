@@ -153,6 +153,16 @@ export default function RootLayout() {
                                 statusBarStyle: "dark",
                             }}
                         />
+                        {/* <Stack.Screen
+                            name="UserManualRoute"
+                            options={{
+                                headerShown: true,
+                                header: () => (
+                                    <ScreenHeader headerName="Remind Credits" />
+                                ),
+                                statusBarStyle: "dark",
+                            }}
+                        /> */}
                         <Stack.Screen name="+not-found" />
                     </Stack>
                 </SafeAreaProvider>
