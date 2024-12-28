@@ -4,7 +4,6 @@ import {
     Text,
     BackHandler,
     ActivityIndicator,
-    Button,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,7 +20,6 @@ import {
     loadLocalStorageData,
     formatIsoDate,
     saveLocalStorageData,
-    getDataToScheduleReminder,
 } from "@/utils/helperFunction";
 import {
     mappedColumnKeysList,
@@ -149,11 +147,15 @@ export const CustomerListScreen = () => {
         }
     };
 
-    const handleListFiltering = (type: string, value: any) => {
+    const handleListFiltering = (
+        type: string,
+        value: any,
+        allData?: Record<string, any>[]
+    ) => {
         const searchTerm = type === "search" ? value : searchValue;
         const dueDate = type === "dueDate" ? value : selectedDate;
 
-        const filteredData = fileData?.filter((obj, index) => {
+        const filteredData = (allData ?? fileData)?.filter((obj, index) => {
             const objSearchValue =
                 typeof obj[searchKey] === "string"
                     ? obj[searchKey]
@@ -180,16 +182,12 @@ export const CustomerListScreen = () => {
         setFilteredData(filteredData);
     };
 
-    const debounceListFiltering = useCallback(
-        debounce((type, value) => {
-            handleListFiltering(type, value);
-        }, 500),
-        [JSON.stringify(fileData)]
-    );
+    const debounceListFiltering = debounce((type, value) => {
+        handleListFiltering(type, value);
+    }, 500);
 
     const handleSearch = (text: string) => {
         setSearchValue(text);
-
         debounceListFiltering("search", text);
     };
 
@@ -216,25 +214,6 @@ export const CustomerListScreen = () => {
             return obj;
         });
 
-        const updatedFilterData = filteredData.map((obj) => {
-            if (obj.id === data.id) {
-                return {
-                    ...data,
-                    notificationId,
-                    isUpdated: true,
-                };
-            }
-
-            return obj;
-        });
-
-        (updatedFilterData ?? []).sort((a, b) => {
-            const dateA = new Date(a["dueDate"]);
-            const dateB = new Date(b["dueDate"]);
-
-            return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0); // Ascending order
-        });
-
         (updatedFileData ?? []).sort((a, b) => {
             const dateA = new Date(a["dueDate"]);
             const dateB = new Date(b["dueDate"]);
@@ -243,11 +222,12 @@ export const CustomerListScreen = () => {
         });
 
         setFileData(updatedFileData);
-        setFilteredData(updatedFilterData);
 
         saveLocalStorageData(updatedFileData ?? [], parsedDataKey);
 
         setCustomerDetailId(undefined);
+
+        handleListFiltering("", "", updatedFileData);
     };
 
     if (!_isNil(customerDetailId)) {
