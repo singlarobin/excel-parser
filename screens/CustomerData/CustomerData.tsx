@@ -29,7 +29,7 @@ import {
 import { Filter } from "./component/Filter/Filter";
 import { DetailUpdate } from "./component/DetailUpdate/DetailUpdate";
 import { Colors } from "@/constants/Colors";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useUpdateNotification } from "./hooks/useUpdateNotification";
 
 Notifications.setNotificationHandler({
@@ -41,6 +41,9 @@ Notifications.setNotificationHandler({
 });
 
 export const CustomerListScreen = () => {
+    const router = useRouter();
+    const { filter } = useLocalSearchParams();
+
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
     const [filteredData, setFilteredData] = useState<
         Array<Record<string, any>>
@@ -57,17 +60,21 @@ export const CustomerListScreen = () => {
 
     useFocusEffect(
         useCallback(() => {
-            fetchData();
+            const filterData = filter
+                ? JSON.parse(filter as string)
+                : {
+                      searchKey: "",
+                      searchValue: "",
+                      selectedDate: "",
+                  };
 
-            setSearchValue("");
-            setSearchKey("name");
-            setSelectedDate("");
+            void fetchData(filterData);
+
+            setSearchKey(filterData?.searchKey ?? "name");
+            setSearchValue(filterData?.searchValue ?? "");
+            setSelectedDate(filterData?.selectedDate ?? "");
         }, [])
     );
-
-    // useEffect(() => {
-    //     setFilteredData(fileData);
-    // }, [JSON.stringify(fileData)]);
 
     useEffect(() => {
         return () => {
@@ -96,45 +103,40 @@ export const CustomerListScreen = () => {
         return () => backHandler.remove();
     }, [customerDetailId]);
 
-    const fetchData = async () => {
+    const fetchData = async (filterData: Record<string, any>) => {
         setIsLoading(true);
         const storedData = await loadLocalStorageData(parsedDataKey);
         const keysList: string[] = await loadLocalStorageData(
             mappedColumnKeysList
         );
 
-        setIsLoading(false);
         if (storedData) {
             setFileData(storedData);
 
-            // let updatedStoredData = [...storedData];
+            let updatedStoredData = [...storedData];
 
-            // if (!_isNil(searchValue) && !_isEmpty(searchValue)) {
-            //     updatedStoredData = updatedStoredData.filter((data) =>
-            //         (data[searchKey] ?? "")
-            //             .toLowerCase()
-            //             .includes(searchValue.toLowerCase())
-            //     );
-            //     console.log("====> search", searchValue, updatedStoredData);
-            // }
+            const { searchValue, searchKey, selectedDate } = filterData;
 
-            // if (!_isNil(selectedDate) && !_isEmpty(selectedDate)) {
-            //     updatedStoredData = updatedStoredData.filter((data) => {
-            //         const currentDueDate =
-            //             !_isNil(data["dueDate"]) && !_isEmpty(data["dueDate"])
-            //                 ? formatIsoDate(data["dueDate"])
-            //                 : "";
+            if (!_isNil(searchValue) && !_isEmpty(searchValue)) {
+                updatedStoredData = updatedStoredData.filter((data) =>
+                    (data[searchKey] ?? "")
+                        .toLowerCase()
+                        .includes(searchValue.toLowerCase())
+                );
+            }
 
-            //         return currentDueDate === formatDate(selectedDate);
-            //     });
-            //     console.log(
-            //         "====> selectedDate",
-            //         selectedDate,
-            //         updatedStoredData
-            //     );
-            // }
+            if (!_isNil(selectedDate) && !_isEmpty(selectedDate)) {
+                updatedStoredData = updatedStoredData.filter((data) => {
+                    const currentDueDate =
+                        !_isNil(data["dueDate"]) && !_isEmpty(data["dueDate"])
+                            ? formatIsoDate(data["dueDate"])
+                            : "";
 
-            setFilteredData(storedData);
+                    return currentDueDate === formatIsoDate(selectedDate);
+                });
+            }
+
+            setFilteredData(updatedStoredData);
         }
 
         if (!_isNil(keysList) && !_isEmpty(keysList)) {
@@ -145,6 +147,8 @@ export const CustomerListScreen = () => {
                 }
             }
         }
+
+        setIsLoading(false);
     };
 
     const handleListFiltering = (
@@ -194,6 +198,16 @@ export const CustomerListScreen = () => {
     const handleDateSelect = (date: string) => {
         setSelectedDate(date);
         debounceListFiltering("dueDate", date);
+    };
+
+    const handleCardClick = (id: string) => {
+        const filter = JSON.stringify({
+            searchKey,
+            searchValue,
+            selectedDate,
+        });
+
+        router.push(`/CustomerDetailsRoute?id=${id}&filter=${filter}`);
     };
 
     const updateFileData = async (
@@ -286,6 +300,7 @@ export const CustomerListScreen = () => {
                                     key={item?.id ?? index}
                                     data={item}
                                     setCustomerDetailId={setCustomerDetailId}
+                                    handleCardClick={handleCardClick}
                                 />
                             );
                         }}

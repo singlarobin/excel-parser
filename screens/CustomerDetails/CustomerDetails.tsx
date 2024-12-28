@@ -29,7 +29,7 @@ import { DetailUpdate } from "../CustomerData/component/DetailUpdate/DetailUpdat
 import { useUpdateNotification } from "../CustomerData/hooks/useUpdateNotification";
 
 export const CustomerDetails = () => {
-    const { id } = useLocalSearchParams();
+    const { id, filter } = useLocalSearchParams();
     const router = useRouter();
 
     const [fileData, setFileData] = useState<Array<Record<string, any>>>([]);
@@ -43,7 +43,7 @@ export const CustomerDetails = () => {
         if (isDetailUpdate) {
             setIsDetailUpdate(false);
         } else if (router.canGoBack()) {
-            router.back();
+            router.push(`/CustomerListRoute?filter=${filter}`);
         }
     };
 
