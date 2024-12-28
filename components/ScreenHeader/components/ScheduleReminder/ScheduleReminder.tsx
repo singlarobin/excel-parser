@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { useUpdateNotification } from "@/screens/CustomerData/hooks/useUpdateNotification";
 
-import { parsedDataKey } from "@/screens/CustomerData/constant";
+import { parsedDataKey, scheduleDelay } from "@/screens/CustomerData/constant";
 import {
     loadLocalStorageData,
     saveLocalStorageData,
@@ -72,41 +72,130 @@ export const ScheduleReminder = ({
             alert("You need to enable permissions for notifications to work!");
             closeModal();
         } else {
-            const storedData: any[] = await loadLocalStorageData(parsedDataKey);
-            if (!_isNil(storedData) && !_isEmpty(storedData)) {
-                setIsScheduling(true);
-                const pArr = storedData.map((obj) => {
-                    return new Promise(async (resolve) => {
-                        if (
-                            !_isNil(obj.notificationId) &&
-                            !_isEmpty(obj.notifcationId)
-                        ) {
-                            await cancelNotification(obj.notificationId);
-                        }
+            try {
+                const storedData: any[] = await loadLocalStorageData(
+                    parsedDataKey
+                );
 
-                        if (
-                            !_isNil(obj["dueDate"]) &&
-                            !_isEmpty(obj["dueDate"])
-                        ) {
-                            const notificationId =
-                                await updateNotificationReminder(obj, time);
-                            resolve({
-                                ...obj,
-                                notificationId,
+                const globaldelay = await loadLocalStorageData(scheduleDelay);
+
+                if (!_isNil(storedData) && !_isEmpty(storedData)) {
+                    setIsScheduling(true);
+
+                    // Define batch size and delay
+                    const batchSize = 30; // Number of notifications per batch
+                    const delay = 1500 + (globaldelay ?? 0); // Delay in milliseconds between batches
+
+                    // Function to process a single batch
+                    const processBatch = async (batch: any[]) => {
+                        const pArr = batch.map((obj) => {
+                            return new Promise(async (resolve, reject) => {
+                                if (
+                                    !_isNil(obj.notificationId) &&
+                                    !_isEmpty(obj.notificationId)
+                                ) {
+                                    await cancelNotification(
+                                        obj.notificationId
+                                    );
+                                }
+
+                                if (
+                                    !_isNil(obj["dueDate"]) &&
+                                    !_isEmpty(obj["dueDate"])
+                                ) {
+                                    try {
+                                        const notificationId =
+                                            await updateNotificationReminder(
+                                                obj,
+                                                time
+                                            );
+                                        resolve({ ...obj, notificationId });
+                                    } catch (err) {
+                                        if (err instanceof Error) {
+                                            console.log(
+                                                "error scheduling reminder: ",
+                                                err.message
+                                            );
+                                        }
+                                        reject(obj);
+                                    }
+                                } else {
+                                    resolve(obj);
+                                }
                             });
+                        });
+
+                        const response = await Promise.allSettled(pArr);
+                        let allResolved = true;
+
+                        const results = response.map((result) => {
+                            if (result.status === "fulfilled") {
+                                return result.value;
+                            } else {
+                                allResolved = false;
+                                return result.reason;
+                            }
+                        });
+
+                        return { allResolved, results };
+                    };
+
+                    let updatedStoredData: any[] = [];
+
+                    let allScheduled = true;
+
+                    // Split the data into batches
+                    for (let i = 0; i < storedData.length; i += batchSize) {
+                        const batch = storedData.slice(i, i + batchSize);
+
+                        // Process the current batch
+                        const { allResolved, results: updatedBatch } =
+                            await processBatch(batch);
+
+                        updatedStoredData = [
+                            ...updatedStoredData,
+                            ...updatedBatch,
+                        ];
+
+                        if (!allResolved) {
+                            allScheduled = false;
                         }
 
-                        resolve(obj);
-                    });
-                });
+                        // Save the updated data to local storage after each batch
 
-                Promise.all(pArr).then((values) => {
-                    saveLocalStorageData(values ?? [], parsedDataKey);
+                        // Add delay before processing the next batch
+                        if (i + batchSize < storedData.length) {
+                            await new Promise((resolve) =>
+                                setTimeout(resolve, delay)
+                            );
+                        }
+                    }
 
-                    Toast.show("Reminder scheduled for all users");
+                    await saveLocalStorageData(
+                        updatedStoredData,
+                        parsedDataKey
+                    );
+                    if (allScheduled) {
+                        Toast.show("Reminder scheduled for all users");
+
+                        await saveLocalStorageData(0, scheduleDelay);
+                    } else {
+                        Toast.show(
+                            "Some error occurred while scheduling all reminders, please try again!!"
+                        );
+
+                        await saveLocalStorageData(
+                            (globaldelay ?? 0) + 500,
+                            scheduleDelay
+                        );
+                    }
                     setIsScheduling(false);
                     closeModal();
-                });
+                }
+            } catch (err) {
+                if (err instanceof Error) {
+                    Toast.show(err.message);
+                }
             }
         }
     }
@@ -120,17 +209,17 @@ export const ScheduleReminder = ({
                 return new Promise(async (resolve) => {
                     if (
                         !_isNil(obj.notificationId) &&
-                        !_isEmpty(obj.notifcationId)
+                        !_isEmpty(obj.notificationId)
                     ) {
                         await cancelNotification(obj.notificationId);
+
+                        resolve({
+                            ...obj,
+                            notificationId: null,
+                        });
+                    } else {
+                        resolve(obj);
                     }
-
-                    resolve({
-                        ...obj,
-                        notificationId: null,
-                    });
-
-                    resolve(obj);
                 });
             });
 
