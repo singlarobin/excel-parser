@@ -53,7 +53,7 @@ export const CustomerListScreen = () => {
     const [searchValue, setSearchValue] = useState("");
     const [searchKey, setSearchKey] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
-    const [customerDetailIndex, setCustomerDetailIndex] = useState<number>();
+    const [customerDetailId, setCustomerDetailId] = useState<string>();
 
     const { updateNotificationReminder } = useUpdateNotification();
 
@@ -81,8 +81,8 @@ export const CustomerListScreen = () => {
 
     useEffect(() => {
         const backAction = () => {
-            if (!_isNil(customerDetailIndex)) {
-                setCustomerDetailIndex(undefined);
+            if (!_isNil(customerDetailId)) {
+                setCustomerDetailId(undefined);
             } else {
                 BackHandler.exitApp();
             }
@@ -96,7 +96,7 @@ export const CustomerListScreen = () => {
         );
 
         return () => backHandler.remove();
-    }, [customerDetailIndex]);
+    }, [customerDetailId]);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -204,8 +204,8 @@ export const CustomerListScreen = () => {
     ) => {
         const notificationId = await updateNotificationReminder(data, time);
 
-        const updatedFileData = fileData.map((obj, index) => {
-            if (customerDetailIndex === index) {
+        const updatedFileData = fileData.map((obj) => {
+            if (customerDetailId === obj.id) {
                 return {
                     ...data,
                     notificationId,
@@ -247,16 +247,15 @@ export const CustomerListScreen = () => {
 
         saveLocalStorageData(updatedFileData ?? [], parsedDataKey);
 
-        setCustomerDetailIndex(undefined);
+        setCustomerDetailId(undefined);
     };
 
-    if (!_isNil(customerDetailIndex)) {
-        return (
-            <DetailUpdate
-                data={fileData[customerDetailIndex]}
-                updateData={updateFileData}
-            />
-        );
+    if (!_isNil(customerDetailId)) {
+        const data = fileData.find((obj) => obj.id === customerDetailId);
+
+        if (!_isNil(data)) {
+            return <DetailUpdate data={data} updateData={updateFileData} />;
+        }
     }
 
     return (
@@ -306,10 +305,7 @@ export const CustomerListScreen = () => {
                                 <Card
                                     key={item?.id ?? index}
                                     data={item}
-                                    index={index}
-                                    setCustomerDetailIndex={
-                                        setCustomerDetailIndex
-                                    }
+                                    setCustomerDetailId={setCustomerDetailId}
                                 />
                             );
                         }}

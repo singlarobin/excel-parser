@@ -8,14 +8,14 @@ import _isEmpty from "lodash/isEmpty";
 import { styles } from "./card.styled";
 import { formatIsoDate } from "@/utils/helperFunction";
 import { useRouter } from "expo-router";
+import { memo } from "react";
 
 type CardProps = {
     data: Record<string, any>;
-    index: number;
-    setCustomerDetailIndex: (index: number) => void;
+    setCustomerDetailId: (id: string) => void;
 };
 
-export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
+export const Card = memo(({ data, setCustomerDetailId }: CardProps) => {
     const router = useRouter();
     const { phone } = data;
 
@@ -59,7 +59,7 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
                 </Text>
                 <View style={[styles.iconsContainer]}>
                     <TouchableOpacity
-                        onPress={() => setCustomerDetailIndex(index)}
+                        onPress={() => setCustomerDetailId(data["id"])}
                     >
                         <Ionicons
                             name="create-outline"
@@ -109,4 +109,4 @@ export const Card = ({ data, index, setCustomerDetailIndex }: CardProps) => {
             </View>
         </TouchableOpacity>
     );
-};
+});

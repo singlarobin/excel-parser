@@ -108,6 +108,7 @@ export const CustomerDetails = () => {
                     return {
                         ...obj,
                         notificationId,
+                        isUpdated: true,
                     };
                 }
 
